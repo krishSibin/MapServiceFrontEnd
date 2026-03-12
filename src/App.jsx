@@ -26,7 +26,7 @@ function App() {
   ];
 
   return (
-    <div className={`app-container ${mapTheme}-theme`}>
+    <div className="app-container">
       <Header />
 
       <section className="stats-row">
