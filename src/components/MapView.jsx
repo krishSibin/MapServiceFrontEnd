@@ -1,115 +1,174 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { io } from 'socket.io-client';
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { io } from "socket.io-client";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icons in Leaflet + React
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-let DefaultIcon = L.icon({
-    iconUrl: markerIcon,
-    shadowUrl: markerShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
+const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
 
-const SOCKET_URL = 'http://localhost:4000';
+    const [panchayatData, setPanchayatData] = useState(null)
+    const [floodData, setFloodData] = useState(null)
+    const [selected, setSelected] = useState(null)
 
-const MapView = ({ scenario }) => {
-    const [geoKey, setGeoKey] = useState(0);
-    const [geoData, setGeoData] = useState(null);
+
+    /* ---------------- FILTER LOGIC ---------------- */
+    const filterFloodData = useCallback((feature) => {
+        if (riskFilter === 'all') return true;
+        const dn = feature.properties?.DN;
+        if (riskFilter === '4') return dn >= 4;
+        return dn === parseInt(riskFilter);
+    }, [riskFilter]);
+
+    // Map Tiles URLs
+    const tiles = {
+        dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    }
+
+    /* ---------------- SOCKET CONNECTION ---------------- */
 
     useEffect(() => {
-        const socket = io(SOCKET_URL);
 
-        socket.on('connect', () => {
-            console.log('Connected to map service backend');
-        });
+        const socket = io(SOCKET_URL)
 
-        socket.on('geojson-update', (data) => {
-            console.log('Received map update:', data);
-            setGeoData(data);
-            setGeoKey(prev => prev + 1); // Force re-render of GeoJSON layer
-        });
+        socket.on("geojson-update", (data) => {
 
-        return () => {
-            socket.disconnect();
+            if (data.panchayat) {
+                setPanchayatData(data.panchayat)
+            }
+
+            if (data.flood) {
+                setFloodData(data.flood)
+            }
+
+        })
+
+        return () => socket.disconnect()
+
+    }, [])
+
+    /* ---------------- FLOOD COLOR ---------------- */
+
+    const getRiskColor = (dn) => {
+
+        if (dn >= 4) return "#ef4444"
+        if (dn === 3) return "#fb923c"
+        if (dn === 2) return "#eab308"
+        return "#22c55e"
+
+    }
+
+    const floodStyle = useCallback((feature) => {
+        return {
+            fillColor: getRiskColor(feature.properties?.DN),
+            weight: 1,
+            color: "white",
+            fillOpacity: 0.7
         };
     }, []);
 
-    // Also update when scenario changes
-    useEffect(() => {
-        setGeoKey(prev => prev + 1);
-    }, [scenario]);
+    const panchayatStyle = useMemo(() => ({
+        color: "#38bdf8",
+        weight: 2,
+        fillOpacity: 0
+    }), []);
 
-    const getWardStyle = (feature) => {
-        // Fallback for features without base_risk
-        const baseRisk = feature.properties?.base_risk || 0.5;
-        let multiplier = 1;
-        if (scenario === 'heavy') multiplier = 1.5;
-        if (scenario === 'extreme') multiplier = 2.5;
+    /* ---------------- CLICK EVENTS ---------------- */
 
-        const risk = baseRisk * multiplier;
+    const floodClick = useCallback((feature, layer) => {
+        layer.on({
+            click: () => {
+                setSelected(feature.properties);
+            }
+        });
+    }, []);
 
-        let color = '#38bdf8'; // Default blue for custom data
-        if (feature.properties?.base_risk) {
-            color = '#22c55e'; // Low
-            if (risk > 1.5) color = '#f43f5e'; // Extreme
-            else if (risk > 0.8) color = '#fb923c'; // High
-            else if (risk > 0.5) color = '#eab308'; // Medium
-        }
+    const panchayatClick = useCallback((feature, layer) => {
+        const p = feature.properties;
+        layer.bindPopup(`
+            <div class="premium-popup">
+                <div class="popup-header">
+                    <span class="popup-tag">ADMINISTRATIVE BOUNDARY</span>
+                    <h3>${p.PANCHAYAT || 'Unknown Panchayat'}</h3>
+                </div>
+                <div class="popup-body">
+                    <div class="popup-row">
+                        <span class="popup-label">District</span>
+                        <span class="popup-val">${p.DISTRICT || 'N/A'}</span>
+                    </div>
+                    <div class="popup-row">
+                        <span class="popup-label">Block</span>
+                        <span class="popup-val">${p.BLOCK || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="popup-footer">
+                    <div class="zoom-hint">Click to focus area</div>
+                </div>
+            </div>
+        `, {
+            className: 'premium-leaflet-popup',
+            maxWidth: 300
+        });
 
-        return {
-            fillColor: color,
-            weight: 2,
-            opacity: 1,
-            color: 'white',
-            dashArray: '3',
-            fillOpacity: scenario === 'normal' ? 0.3 : 0.6
-        };
-    };
+        layer.on({
+            click: (e) => {
+                const map = e.target._map;
+                if (map) {
+                    map.fitBounds(e.target.getBounds(), {
+                        padding: [50, 50],
+                        maxZoom: 14,
+                        animate: true
+                    });
+                }
+            }
+        });
+    }, []);
+
+    /* ---------------- MAP ---------------- */
 
     return (
-        <div className="map-wrapper">
+
+        <div style={{ height: "100%" }}>
+
             <MapContainer
-                center={[10.08, 76.3]}
-                zoom={11}
-                scrollWheelZoom={true}
-                className="main-map"
+                center={[10.2, 76.45]}
+                zoom={10}
+                style={{ height: "100%" }}
+                preferCanvas={true}
             >
                 <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url={tiles[theme]}
                 />
 
-                {geoData && (
+                {/* Panchayat Boundaries */}
+                {panchayatData && (
                     <GeoJSON
-                        key={geoKey}
-                        data={geoData}
-                        style={getWardStyle}
-                        onEachFeature={(feature, layer) => {
-                            const name = feature.properties?.name || 'Unnamed Feature';
-                            layer.bindPopup(`
-                                <div class="custom-popup">
-                                    <strong>${name}</strong><br/>
-                                    ${feature.properties?.base_risk ? `
-                                        Risk Level: <span style="color: ${getWardStyle(feature).fillColor}">
-                                            ${scenario === 'extreme' ? 'CRITICAL' : scenario === 'heavy' ? 'WARNING' : 'STABLE'}
-                                        </span>
-                                    ` : 'Custom Surface Data'}
-                                </div>
-                            `);
-                        }}
+                        key={`panchayat-${panchayatData.features?.length || 0}`}
+                        data={panchayatData}
+                        style={panchayatStyle}
+                        onEachFeature={panchayatClick}
+                    />
+                )}
+
+                {/* Flood Zones */}
+                {floodData && (
+                    <GeoJSON
+                        key={`flood-${riskFilter}-${floodData.features?.length || 0}`}
+                        data={floodData}
+                        style={floodStyle}
+                        onEachFeature={floodClick}
+                        filter={filterFloodData}
                     />
                 )}
 
             </MapContainer>
+
         </div>
-    );
-};
 
-export default MapView;
+    )
 
+}
+
+export default MapView
