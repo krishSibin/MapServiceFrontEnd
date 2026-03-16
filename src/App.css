@@ -686,8 +686,8 @@
   }
 
   .widget-card .panel-header span {
-    font-size: 0.6rem !important;
-    letter-spacing: 0.5px;
+    font-size: 0.55rem !important;
+    letter-spacing: 0.2px;
   }
 
   .widget-card .panel-header svg {
@@ -714,17 +714,18 @@
   }
 
   .infra-item {
-    font-size: 0.55rem;
-    padding-bottom: 0.2rem;
+    font-size: 0.5rem !important;
+    padding-bottom: 0.15rem;
   }
 
   .infra-status {
-    padding: 1px 3px;
-    font-size: 0.45rem;
+    padding: 1px 2px;
+    font-size: 0.4rem !important;
   }
 
   .widget-card p {
-    font-size: 0.55rem !important;
+    font-size: 0.5rem !important;
+    margin-top: 0.2rem;
   }
 
   .theme-toggle {
@@ -747,12 +748,12 @@
   }
 
   .side-drawer {
-    width: 300px;
-    right: -320px;
+    width: 280px !important;
+    right: -300px !important;
   }
 
   .side-drawer.open {
-    right: 0;
+    right: 0 !important;
   }
 
   .drawer-trigger-btn span {
