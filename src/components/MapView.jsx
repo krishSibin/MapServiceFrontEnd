@@ -6,12 +6,10 @@ import "leaflet/dist/leaflet.css";
 
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
+const MapView = ({ theme = 'dark', riskFilter = 'all', panchayatData, floodData, searchTarget }) => {
 
-    const [panchayatData, setPanchayatData] = useState(null)
-    const [floodData, setFloodData] = useState(null)
     const [selected, setSelected] = useState(null)
-
+    const [map, setMap] = useState(null)
 
     /* ---------------- FILTER LOGIC ---------------- */
     const filterFloodData = useCallback((feature) => {
@@ -27,37 +25,32 @@ const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
         light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
     }
 
-    /* ---------------- SOCKET CONNECTION ---------------- */
-
+    /* ---------------- SEARCH CENTERING ---------------- */
     useEffect(() => {
+        if (searchTarget && map) {
+            const targetBounds = L.geoJSON(searchTarget).getBounds();
+            map.fitBounds(targetBounds, {
+                padding: [50, 50],
+                maxZoom: 14,
+                animate: true,
+                duration: 1.5
+            });
 
-        const socket = io(SOCKET_URL)
-
-        socket.on("geojson-update", (data) => {
-
-            if (data.panchayat) {
-                setPanchayatData(data.panchayat)
-            }
-
-            if (data.flood) {
-                setFloodData(data.flood)
-            }
-
-        })
-
-        return () => socket.disconnect()
-
-    }, [])
+            // Automatically open popup for searched panchayat
+            map.eachLayer((layer) => {
+                if (layer.feature && layer.feature.properties?.PANCHAYAT === searchTarget.properties?.PANCHAYAT) {
+                    layer.openPopup();
+                }
+            });
+        }
+    }, [searchTarget, map]);
 
     /* ---------------- FLOOD COLOR ---------------- */
-
     const getRiskColor = (dn) => {
-
         if (dn >= 4) return "#ef4444"
         if (dn === 3) return "#fb923c"
         if (dn === 2) return "#eab308"
         return "#22c55e"
-
     }
 
     const floodStyle = useCallback((feature) => {
@@ -76,7 +69,6 @@ const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
     }), []);
 
     /* ---------------- CLICK EVENTS ---------------- */
-
     const floodClick = useCallback((feature, layer) => {
         layer.on({
             click: () => {
@@ -114,9 +106,9 @@ const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
 
         layer.on({
             click: (e) => {
-                const map = e.target._map;
-                if (map) {
-                    map.fitBounds(e.target.getBounds(), {
+                const mapInstance = e.target._map;
+                if (mapInstance) {
+                    mapInstance.fitBounds(e.target.getBounds(), {
                         padding: [50, 50],
                         maxZoom: 14,
                         animate: true
@@ -127,16 +119,14 @@ const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
     }, []);
 
     /* ---------------- MAP ---------------- */
-
     return (
-
         <div style={{ height: "100%" }}>
-
             <MapContainer
                 center={[10.2, 76.45]}
                 zoom={10}
                 style={{ height: "100%" }}
                 preferCanvas={true}
+                ref={setMap}
             >
                 <TileLayer
                     url={tiles[theme]}
@@ -162,13 +152,9 @@ const MapView = ({ theme = 'dark', riskFilter = 'all' }) => {
                         filter={filterFloodData}
                     />
                 )}
-
             </MapContainer>
-
         </div>
-
     )
-
 }
 
-export default MapView
+export default MapView;
