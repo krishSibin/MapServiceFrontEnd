@@ -331,6 +331,10 @@
   transform: translateY(0);
 }
 
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 .live-dot {
   width: 8px;
   height: 8px;
@@ -682,8 +686,8 @@
   }
 
   .widget-card .panel-header span {
-    font-size: 0.75rem !important;
-    letter-spacing: 1px;
+    font-size: 0.6rem !important;
+    letter-spacing: 0.5px;
   }
 
   .widget-card .panel-header svg {
@@ -710,13 +714,17 @@
   }
 
   .infra-item {
-    font-size: 0.6rem;
-    padding-bottom: 0.25rem;
+    font-size: 0.55rem;
+    padding-bottom: 0.2rem;
   }
 
   .infra-status {
-    padding: 1px 4px;
-    font-size: 0.5rem;
+    padding: 1px 3px;
+    font-size: 0.45rem;
+  }
+
+  .widget-card p {
+    font-size: 0.55rem !important;
   }
 
   .theme-toggle {
@@ -736,6 +744,15 @@
   .drawer-trigger-btn {
     padding: 0.4rem 0.6rem;
     min-width: max-content;
+  }
+
+  .side-drawer {
+    width: 300px;
+    right: -320px;
+  }
+
+  .side-drawer.open {
+    right: 0;
   }
 
   .drawer-trigger-btn span {

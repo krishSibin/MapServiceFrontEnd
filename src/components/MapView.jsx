@@ -117,6 +117,7 @@ const MapView = ({
                 zoom={10}
                 style={{ height: "100%" }}
                 preferCanvas={true}
+                attributionControl={false}
                 ref={setMap}
             >
                 <TileLayer
