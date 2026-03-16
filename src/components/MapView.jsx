@@ -6,9 +6,17 @@ import "leaflet/dist/leaflet.css";
 
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
-const MapView = ({ theme = 'dark', riskFilter = 'all', panchayatData, floodData, searchTarget }) => {
+const MapView = ({
+    theme = 'dark',
+    riskFilter = 'all',
+    panchayatData,
+    floodData,
+    searchTarget,
+    selectedFeature,
+    onSelect,
+    onSearchComplete
+}) => {
 
-    const [selected, setSelected] = useState(null)
     const [map, setMap] = useState(null)
 
     /* ---------------- FILTER LOGIC ---------------- */
@@ -31,19 +39,18 @@ const MapView = ({ theme = 'dark', riskFilter = 'all', panchayatData, floodData,
             const targetBounds = L.geoJSON(searchTarget).getBounds();
             map.fitBounds(targetBounds, {
                 padding: [50, 50],
-                maxZoom: 14,
+                maxZoom: 18,
                 animate: true,
                 duration: 1.5
             });
 
-            // Automatically open popup for searched panchayat
-            map.eachLayer((layer) => {
-                if (layer.feature && layer.feature.properties?.PANCHAYAT === searchTarget.properties?.PANCHAYAT) {
-                    layer.openPopup();
-                }
-            });
+            // Automatically select and highlight searched panchayat
+            onSelect(searchTarget);
+
+            // Clear the search target so it doesn't conflict with manual clicks
+            if (onSearchComplete) onSearchComplete();
         }
-    }, [searchTarget, map]);
+    }, [searchTarget, map, onSelect, onSearchComplete]);
 
     /* ---------------- FLOOD COLOR ---------------- */
     const getRiskColor = (dn) => {
@@ -62,61 +69,45 @@ const MapView = ({ theme = 'dark', riskFilter = 'all', panchayatData, floodData,
         };
     }, []);
 
-    const panchayatStyle = useMemo(() => ({
-        color: "#38bdf8",
-        weight: 2,
-        fillOpacity: 0
-    }), []);
+    const panchayatStyle = useCallback((feature) => {
+        const isSelected = selectedFeature && feature.properties?.PANCHAYAT === selectedFeature.properties?.PANCHAYAT;
+        return {
+            color: isSelected ? "#38bdf8" : "rgba(56, 189, 248, 0.5)",
+            weight: isSelected ? 4 : 2,
+            fillColor: isSelected ? "#38bdf8" : "transparent",
+            fillOpacity: isSelected ? 0.2 : 0,
+            dashArray: isSelected ? "" : "3"
+        };
+    }, [selectedFeature]);
 
     /* ---------------- CLICK EVENTS ---------------- */
     const floodClick = useCallback((feature, layer) => {
         layer.on({
             click: () => {
-                setSelected(feature.properties);
+                onSelect(feature);
             }
         });
-    }, []);
+    }, [onSelect]);
 
     const panchayatClick = useCallback((feature, layer) => {
         const p = feature.properties;
-        layer.bindPopup(`
-            <div class="premium-popup">
-                <div class="popup-header">
-                    <span class="popup-tag">ADMINISTRATIVE BOUNDARY</span>
-                    <h3>${p.PANCHAYAT || 'Unknown Panchayat'}</h3>
-                </div>
-                <div class="popup-body">
-                    <div class="popup-row">
-                        <span class="popup-label">District</span>
-                        <span class="popup-val">${p.DISTRICT || 'N/A'}</span>
-                    </div>
-                    <div class="popup-row">
-                        <span class="popup-label">Block</span>
-                        <span class="popup-val">${p.BLOCK || 'N/A'}</span>
-                    </div>
-                </div>
-                <div class="popup-footer">
-                    <div class="zoom-hint">Click to focus area</div>
-                </div>
-            </div>
-        `, {
-            className: 'premium-leaflet-popup',
-            maxWidth: 300
-        });
+        // Premium popup removed in favor of side overlay
 
         layer.on({
             click: (e) => {
+                onSelect(feature);
+
                 const mapInstance = e.target._map;
                 if (mapInstance) {
                     mapInstance.fitBounds(e.target.getBounds(), {
                         padding: [50, 50],
-                        maxZoom: 14,
+                        maxZoom: 18,
                         animate: true
                     });
                 }
             }
         });
-    }, []);
+    }, [onSelect]);
 
     /* ---------------- MAP ---------------- */
     return (
@@ -135,7 +126,7 @@ const MapView = ({ theme = 'dark', riskFilter = 'all', panchayatData, floodData,
                 {/* Panchayat Boundaries */}
                 {panchayatData && (
                     <GeoJSON
-                        key={`panchayat-${panchayatData.features?.length || 0}`}
+                        key={`panchayat-${panchayatData.features?.length || 0}-${selectedFeature?.properties?.PANCHAYAT || 'none'}`}
                         data={panchayatData}
                         style={panchayatStyle}
                         onEachFeature={panchayatClick}

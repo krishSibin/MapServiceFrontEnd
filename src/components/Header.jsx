@@ -1,12 +1,16 @@
 import React from 'react';
-import { ShieldAlert, Map as MapIcon, Activity, Bell, FileText } from 'lucide-react';
+import { ShieldAlert, Menu, Bell, FileText } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ onOpenMenu }) => {
     return (
         <header className="dashboard-header">
             <div className="logo-section">
-                <ShieldAlert className="logo-icon pulse-red" size={28} />
-                <h1 className="text-xl font-bold tracking-tight">Real-Time <span className="text-blue-400">Flood</span> Monitoring System</h1>
+                <div className="logo-icon-container">
+                    <ShieldAlert className="logo-icon pulse-red" size={28} />
+                </div>
+                <h1 className="text-xl font-bold tracking-tight">
+                    Real-Time <span className="text-blue-400">Flood</span> Monitoring System
+                </h1>
             </div>
 
             <nav className="status-indicators">
@@ -18,6 +22,16 @@ const Header = () => {
                     <FileText size={16} className="text-blue-400" />
                     <span>REPORTS</span>
                 </div>
+
+                {/* Premium Side Drawer Toggle */}
+                <button
+                    onClick={onOpenMenu}
+                    className="drawer-trigger-btn"
+                    title="Analysis Tools"
+                >
+                    <Menu size={20} />
+                    <span className="text-xs font-bold ml-2">TOOLS</span>
+                </button>
             </nav>
         </header>
     );

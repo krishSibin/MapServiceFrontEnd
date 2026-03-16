@@ -27,40 +27,40 @@ const SideDrawer = ({ isOpen, onClose, panchayatData, onSearch, riskFilter, setR
                 {/* Search Section */}
                 <div className="drawer-section">
                     <label className="section-label">
-                        <Search size={14} /> SEARCH PANCHAYATH
+                        <Search size={14} className="text-blue-400" /> SEARCH PANCHAYATH
                     </label>
-                    <div className="search-input-wrapper">
+                    <div className="search-input-wrapper relative">
                         <input
                             type="text"
-                            placeholder="Enter panchayath name..."
+                            placeholder="Type panchayath name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="drawer-input"
+                            className="drawer-input w-full bg-slate-800/50 border-2 border-slate-700 focus:border-blue-500 text-white p-3 rounded-xl outline-none transition-all placeholder:text-slate-500"
                         />
+                        {searchTerm && filteredPanchayats.length > 0 && (
+                            <div className="search-results absolute left-0 right-0 mt-2 z-50">
+                                {filteredPanchayats.map((name, i) => (
+                                    <div
+                                        key={i}
+                                        className="result-item"
+                                        onClick={() => {
+                                            onSearch(name);
+                                            setSearchTerm('');
+                                        }}
+                                    >
+                                        <ChevronRight size={14} className="text-slate-500" />
+                                        <span>{name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    {searchTerm && filteredPanchayats.length > 0 && (
-                        <div className="search-results">
-                            {filteredPanchayats.map((name, i) => (
-                                <div
-                                    key={i}
-                                    className="result-item"
-                                    onClick={() => {
-                                        onSearch(name);
-                                        setSearchTerm('');
-                                    }}
-                                >
-                                    <ChevronRight size={14} className="text-slate-500" />
-                                    <span>{name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {/* Filter Section */}
                 <div className="drawer-section">
                     <label className="section-label">
-                        <Filter size={14} /> RISK INTENSITY (DN)
+                        <Filter size={14} className="text-blue-400" /> RISK INTENSITY (DN)
                     </label>
                     <div className="filter-grid">
                         {[
@@ -82,17 +82,19 @@ const SideDrawer = ({ isOpen, onClose, panchayatData, onSearch, riskFilter, setR
                     </div>
                 </div>
 
-                {/* Info Section */}
-                <div className="drawer-section info-box">
-                    <div className="info-header">
-                        <Info size={16} /> <span>Quick Guide</span>
+                <div className="mt-auto">
+                    {/* Info Section */}
+                    <div className="drawer-section guide-box">
+                        <div className="guide-header">
+                            <Info size={16} /> <span>Quick Guide</span>
+                        </div>
+                        <p>Search for a panchayath to focus the map. Use filters to identify areas by flood intensity level (DN).</p>
                     </div>
-                    <p>Use the search tool to quickly locate specific administrative boundaries. The map will automatically zoom and center on the selected panchayath.</p>
                 </div>
             </div>
 
             <div className="drawer-footer">
-                <span className="text-xs text-slate-500">MapService v1.0.4 • Live Data Feed</span>
+                <span className="text-xs text-slate-500">MapService v1.0.5 • Live Data Feed</span>
             </div>
         </div>
     );

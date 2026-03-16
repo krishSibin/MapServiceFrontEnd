@@ -26,6 +26,7 @@ function App() {
   const [panchayatData, setPanchayatData] = useState(null);
   const [floodData, setFloodData] = useState(null);
   const [searchTarget, setSearchTarget] = useState(null);
+  const [selectedFeature, setSelectedFeature] = useState(null);
 
   /* ---------------- SOCKET CONNECTION ---------------- */
   useEffect(() => {
@@ -44,6 +45,11 @@ function App() {
     { label: "Villages Affected", value: "8", unit: "", icon: Home, color: "#f43f5e" }
   ];
 
+  /* ---------------- HANDLERS ---------------- */
+  const handleSelect = React.useCallback((feature) => {
+    setSelectedFeature(feature);
+  }, []);
+
   const handleSearchPanchayat = (panchayatName) => {
     if (!panchayatData) return;
     const feature = panchayatData.features.find(
@@ -56,17 +62,20 @@ function App() {
     }
   };
 
-  return (
-    <div className={`app-container ${mapTheme}-theme`}>
-      <Header />
+  const clearSearchTarget = React.useCallback(() => {
+    setSearchTarget(null);
+  }, []);
 
-      <button
-        className="drawer-toggle-btn"
-        onClick={() => setIsDrawerOpen(true)}
-      >
-        <Menu size={20} />
-        <span>Analysis Tools</span>
-      </button>
+  const getRiskColor = (dn) => {
+    if (dn >= 4) return "#ef4444"
+    if (dn === 3) return "#fb923c"
+    if (dn === 2) return "#eab308"
+    return "#22c55e"
+  }
+
+  return (
+    <div className="app-container">
+      <Header onOpenMenu={() => setIsDrawerOpen(true)} />
 
       <SideDrawer
         isOpen={isDrawerOpen}
@@ -94,7 +103,7 @@ function App() {
       </section>
 
       <main className="main-dashboard-grid">
-        <div className="map-section">
+        <div className={`map-section ${mapTheme}-theme`}>
           {/* Theme Toggle */}
           <div className="theme-toggle">
             <button
@@ -113,6 +122,9 @@ function App() {
             panchayatData={panchayatData}
             floodData={floodData}
             searchTarget={searchTarget}
+            selectedFeature={selectedFeature}
+            onSelect={handleSelect}
+            onSearchComplete={clearSearchTarget}
           />
 
           {/* Map Overlay Legend */}
@@ -130,7 +142,92 @@ function App() {
               <span>Moderate Risk</span>
             </div>
           </div>
+
+          {/* Map Info Overlay (Floating on Desktop) */}
+          {selectedFeature && (
+            <div className="map-info-overlay desktop-only">
+              <div className="overlay-header">
+                <div className="title-group">
+                  <span className="source-tag">
+                    {selectedFeature.properties.PANCHAYAT ? 'ADMINISTRATIVE AREA' : 'FLOOD ANALYSIS'}
+                  </span>
+                  <h3>{selectedFeature.properties.PANCHAYAT || `Risk Zone (DN: ${selectedFeature.properties.DN})`}</h3>
+                </div>
+                <button className="close-overlay" onClick={() => setSelectedFeature(null)}>
+                  ×
+                </button>
+              </div>
+
+              <div className="overlay-content">
+                {selectedFeature.properties.PANCHAYAT ? (
+                  <>
+                    <div className="info-grid">
+                      <div className="info-item">
+                        <label>District</label>
+                        <span>{selectedFeature.properties.DISTRICT || 'N/A'}</span>
+                      </div>
+                      <div className="info-item">
+                        <label>Block</label>
+                        <span>{selectedFeature.properties.BLOCK || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="info-grid">
+                      <div className="info-item">
+                        <label>Risk Index</label>
+                        <span style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</span>
+                      </div>
+                      <div className="info-item">
+                        <label>Severity</label>
+                        <span>{selectedFeature.properties.DN >= 4 ? 'CRITICAL' : selectedFeature.properties.DN === 3 ? 'HIGH' : 'MODERATE'}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Mobile Selection Card (Flowing below map) */}
+        {selectedFeature && (
+          <div className="mobile-selection-card mobile-only">
+            <div className="card-header">
+              <span className="source-tag">{selectedFeature.properties.PANCHAYAT ? 'PANCHAYAT ANALYSIS' : 'FLOOD RISK'}</span>
+              <div className="header-main">
+                <h3>{selectedFeature.properties.PANCHAYAT || `Risk Level ${selectedFeature.properties.DN}`}</h3>
+                <button className="close-btn" onClick={() => setSelectedFeature(null)}>×</button>
+              </div>
+            </div>
+            <div className="card-body">
+              {selectedFeature.properties.PANCHAYAT ? (
+                <div className="mobile-info-row">
+                  <div className="mobile-info-col">
+                    <label>District</label>
+                    <p>{selectedFeature.properties.DISTRICT}</p>
+                  </div>
+                  <div className="mobile-info-col">
+                    <label>Block</label>
+                    <p>{selectedFeature.properties.BLOCK}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mobile-info-row">
+                  <div className="mobile-info-col">
+                    <label>Severity</label>
+                    <p style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN >= 4 ? 'CRITICAL' : 'MODERATE'}</p>
+                  </div>
+                  <div className="mobile-info-col">
+                    <label>Action</label>
+                    <p>High Alert</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       <section className="bottom-widgets">
@@ -172,7 +269,7 @@ function App() {
           </div>
         </div>
       </section>
-    </div>
+    </div >
   );
 }
 
