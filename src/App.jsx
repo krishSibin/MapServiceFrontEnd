@@ -23,8 +23,8 @@ function App() {
   const [mapTheme, setMapTheme] = useState('dark');
   const [riskFilter, setRiskFilter] = useState('all');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [panchayatData, setPanchayatData] = useState(null);
-  const [floodData, setFloodData] = useState(null);
+  const [layers, setLayers] = useState({});
+  const [visibleLayers, setVisibleLayers] = useState(['panchayat', 'flood', 'crop', 'roads', 'settlement']);
   const [searchTarget, setSearchTarget] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
 
@@ -32,8 +32,7 @@ function App() {
   useEffect(() => {
     const socket = io(SOCKET_URL);
     socket.on("geojson-update", (data) => {
-      if (data.panchayat) setPanchayatData(data.panchayat);
-      if (data.flood) setFloodData(data.flood);
+      setLayers(data);
     });
     return () => socket.disconnect();
   }, []);
@@ -51,14 +50,13 @@ function App() {
   }, []);
 
   const handleSearchPanchayat = (panchayatName) => {
-    if (!panchayatData) return;
-    const feature = panchayatData.features.find(
+    if (!layers.panchayat) return;
+    const feature = layers.panchayat.features.find(
       f => f.properties.PANCHAYAT?.toLowerCase() === panchayatName.toLowerCase()
     );
     if (feature) {
-      // Create a fresh object to force useEffect in MapView to trigger
       setSearchTarget({ ...feature, _searchId: Date.now() });
-      setIsDrawerOpen(false); // Close drawer on search
+      setIsDrawerOpen(false);
     }
   };
 
@@ -80,10 +78,12 @@ function App() {
       <SideDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        panchayatData={panchayatData}
+        layers={layers}
         onSearch={handleSearchPanchayat}
         riskFilter={riskFilter}
         setRiskFilter={setRiskFilter}
+        visibleLayers={visibleLayers}
+        setVisibleLayers={setVisibleLayers}
       />
 
       <section className="stats-row">
@@ -118,9 +118,12 @@ function App() {
 
           <MapView
             theme={mapTheme}
+            layers={
+              Object.fromEntries(
+                Object.entries(layers).filter(([name]) => visibleLayers.includes(name))
+              )
+            }
             riskFilter={riskFilter}
-            panchayatData={panchayatData}
-            floodData={floodData}
             searchTarget={searchTarget}
             selectedFeature={selectedFeature}
             onSelect={handleSelect}
@@ -130,16 +133,28 @@ function App() {
           {/* Map Overlay Legend */}
           <div className="map-legend">
             <div className="legend-item">
-              <div className="legend-color" style={{ background: '#38bdf8' }}></div>
-              <span>Panchayat Boundaries</span>
+              <div className="legend-color" style={{ border: '2px dashed #38bdf8', background: 'transparent' }}></div>
+              <span>Panchayath Boundary</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ background: '#ef4444' }}></div>
-              <span>High Risk (Flood)</span>
+              <span>Flood: High Risk (4+)</span>
             </div>
             <div className="legend-item">
               <div className="legend-color" style={{ background: '#fb923c' }}></div>
-              <span>Moderate Risk</span>
+              <span>Flood: Moderate (3)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ background: '#84cc16' }}></div>
+              <span>Crop Zones (Agriculture)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ background: '#f97316' }}></div>
+              <span>Road Impact Infrastructure</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ background: '#38bdf8', opacity: 0.6 }}></div>
+              <span>Settlement Areas</span>
             </div>
           </div>
 

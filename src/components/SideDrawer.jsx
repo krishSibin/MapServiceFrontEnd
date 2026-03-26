@@ -1,15 +1,31 @@
 import React, { useState } from 'react';
-import { X, Search, Filter, Map as MapIcon, Info, ChevronRight } from 'lucide-react';
+import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves, Sprout, MapPin, Home } from 'lucide-react';
 
-const SideDrawer = ({ isOpen, onClose, panchayatData, onSearch, riskFilter, setRiskFilter }) => {
+const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilter, visibleLayers, setVisibleLayers }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredPanchayats = panchayatData?.features
-        ? panchayatData.features
+    const filteredPanchayats = layers?.panchayat?.features
+        ? layers.panchayat.features
             .map(f => f.properties.PANCHAYAT)
             .filter(name => name?.toLowerCase().includes(searchTerm.toLowerCase()))
             .slice(0, 10)
         : [];
+
+    const toggleLayer = (layerName) => {
+        if (visibleLayers.includes(layerName)) {
+            setVisibleLayers(visibleLayers.filter(l => l !== layerName));
+        } else {
+            setVisibleLayers([...visibleLayers, layerName]);
+        }
+    };
+
+    const layerItems = [
+        { id: 'panchayat', label: 'Land Boundaries', icon: MapIcon, color: '#38bdf8' },
+        { id: 'flood', label: 'Flood Risk (DN)', icon: Waves, color: '#ef4444' },
+        { id: 'crop', label: 'Agricultural Areas', icon: Sprout, color: '#10b981' },
+        { id: 'roads', label: 'Road Infrastructure', icon: MapPin, color: '#fb923c' },
+        { id: 'settlement', label: 'Human Settlements', icon: Home, color: '#818cf8' }
+    ];
 
     return (
         <div className={`side-drawer ${isOpen ? 'open' : ''}`}>
@@ -57,30 +73,54 @@ const SideDrawer = ({ isOpen, onClose, panchayatData, onSearch, riskFilter, setR
                     </div>
                 </div>
 
-                {/* Filter Section */}
+                {/* Layer Control Section */}
                 <div className="drawer-section">
                     <label className="section-label">
-                        <Filter size={14} className="text-blue-400" /> RISK INTENSITY (DN)
+                        <Layers size={14} className="text-blue-400" /> ACTIVE DATA LAYERS
                     </label>
-                    <div className="filter-grid">
-                        {[
-                            { id: 'all', label: 'All Risks', color: '#94a3b8' },
-                            { id: '4', label: 'High (4+)', color: '#ef4444' },
-                            { id: '3', label: 'Moderate (3)', color: '#fb923c' },
-                            { id: '2', label: 'Low (2)', color: '#eab308' },
-                            { id: '1', label: 'Minimal (1)', color: '#22c55e' },
-                        ].map(item => (
-                            <button
+                    <div className="layer-stack">
+                        {layerItems.map(item => (
+                            <div
                                 key={item.id}
-                                className={`filter-chip ${riskFilter === item.id ? 'active' : ''}`}
-                                onClick={() => setRiskFilter(item.id)}
-                                style={{ '--chip-color': item.color }}
+                                className={`layer-toggle-row ${visibleLayers.includes(item.id) ? 'active' : ''}`}
+                                onClick={() => toggleLayer(item.id)}
                             >
-                                {item.label}
-                            </button>
+                                <div className="layer-info">
+                                    <item.icon size={16} style={{ color: item.color }} />
+                                    <span>{item.label}</span>
+                                </div>
+                                <div className={`custom-checkbox ${visibleLayers.includes(item.id) ? 'checked' : ''}`}></div>
+                            </div>
                         ))}
                     </div>
                 </div>
+
+                {/* Filter Section - Specifically for Flood Risk */}
+                {visibleLayers.includes('flood') && (
+                    <div className="drawer-section">
+                        <label className="section-label">
+                            <Filter size={14} className="text-blue-400" /> FLOOD INTENSITY (DN)
+                        </label>
+                        <div className="filter-grid">
+                            {[
+                                { id: 'all', label: 'All Risks', color: '#94a3b8' },
+                                { id: '4', label: 'High (4+)', color: '#ef4444' },
+                                { id: '3', label: 'Moderate (3)', color: '#fb923c' },
+                                { id: '2', label: 'Low (2)', color: '#eab308' },
+                                { id: '1', label: 'Minimal (1)', color: '#22c55e' },
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    className={`filter-chip ${riskFilter === item.id ? 'active' : ''}`}
+                                    onClick={() => setRiskFilter(item.id)}
+                                    style={{ '--chip-color': item.color }}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="mt-auto">
                     {/* Info Section */}
@@ -88,13 +128,13 @@ const SideDrawer = ({ isOpen, onClose, panchayatData, onSearch, riskFilter, setR
                         <div className="guide-header">
                             <Info size={16} /> <span>Quick Guide</span>
                         </div>
-                        <p>Search for a panchayath to focus the map. Use filters to identify areas by flood intensity level (DN).</p>
+                        <p>Toggle layers to view different analysis data. Use the intensity filter to drill down into flood hazard zones.</p>
                     </div>
                 </div>
             </div>
 
             <div className="drawer-footer">
-                <span className="text-xs text-slate-500">MapService v1.0.5 • Live Data Feed</span>
+                <span className="text-xs text-slate-500">MapService VR Analytics • Live Data</span>
             </div>
         </div>
     );
