@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useCallback } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -13,7 +13,11 @@ const MapController = ({ searchTarget, onSearchComplete }) => {
                 const layer = L.geoJSON(searchTarget);
                 const bounds = layer.getBounds();
                 if (bounds.isValid()) {
-                    map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                    map.flyToBounds(bounds, {
+                        padding: [50, 50],
+                        duration: 1.5,
+                        easeLinearity: 0.25
+                    });
                 }
             } catch (err) {
                 console.warn("Bounds error:", err);
@@ -24,6 +28,57 @@ const MapController = ({ searchTarget, onSearchComplete }) => {
 
     return null;
 };
+
+// Optimized individual GeoJSON layer component to prevent unnecessary re-renders
+const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect }) => {
+    const filteredFeatures = useMemo(() => {
+        if (!data || !data.features) return [];
+        if (riskFilter === "all") return data.features;
+
+        return data.features.filter(f => {
+            const dn = f.properties?.DN;
+            if (dn !== undefined && dn !== null) {
+                return dn.toString() === riskFilter;
+            }
+            return true;
+        });
+    }, [data, riskFilter]);
+
+    const layerData = useMemo(() => ({
+        type: "FeatureCollection",
+        features: filteredFeatures
+    }), [filteredFeatures]);
+
+    const onEachFeature = useCallback((feature, layer) => {
+        layer.on({
+            click: (e) => {
+                L.DomEvent.stopPropagation(e);
+                onSelect && onSelect({ ...feature, _layerName: name });
+            },
+            mouseover: (e) => {
+                const l = e.target;
+                l.setStyle({ fillOpacity: 0.9, weight: 2 });
+            },
+            mouseout: (e) => {
+                const l = e.target;
+                l.setStyle(getStyle(name, feature));
+            }
+        });
+    }, [onSelect, name, getStyle]);
+
+    if (filteredFeatures.length === 0) return null;
+
+    return (
+        <GeoJSON
+            key={`${name}-${riskFilter}`}
+            data={layerData}
+            style={(f) => getStyle(name, f)}
+            onEachFeature={onEachFeature}
+            // Use canvas for better performance with large sets
+            renderer={L.canvas()}
+        />
+    );
+});
 
 const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete }) => {
 
@@ -79,46 +134,25 @@ const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete 
             center={[10.2, 76.45]}
             zoom={10}
             style={{ height: "100%", width: "100%" }}
+            preferCanvas={true} // Boost performance by using canvas instead of SVG
+            zoomSnap={0.5}
+            zoomDelta={0.5}
+            wheelPxPerZoomLevel={120} // Make zooming feel smoother
         >
             <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
             <MapController searchTarget={searchTarget} onSearchComplete={onSearchComplete} />
 
-            {Object.entries(layers).map(([name, data]) => {
-                if (!data || !data.features) return null;
-
-                // Apply risk filter safely to any layer that has a DN property
-                let filteredData = data;
-                if (riskFilter !== "all") {
-                    filteredData = {
-                        ...data,
-                        features: data.features.filter(f => {
-                            const dn = f.properties?.DN;
-                            // Only filter if the feature has a DN property
-                            if (dn !== undefined && dn !== null) {
-                                return dn.toString() === riskFilter;
-                            }
-                            return true; // Keep features without DN (like boundaries) visible
-                        })
-                    };
-                }
-
-                return (
-                    <GeoJSON
-                        key={`${name}-${riskFilter}-${data.features.length}`}
-                        data={filteredData}
-                        style={(f) => getStyle(name, f)}
-                        onEachFeature={(feature, layer) => {
-                            layer.on({
-                                click: () => {
-                                    // Add layer metadata before selecting
-                                    onSelect && onSelect({ ...feature, _layerName: name });
-                                }
-                            });
-                        }}
-                    />
-                );
-            })}
+            {Object.entries(layers).map(([name, data]) => (
+                <OptimizedLayer
+                    key={name}
+                    name={name}
+                    data={data}
+                    riskFilter={riskFilter}
+                    getStyle={getStyle}
+                    onSelect={onSelect}
+                />
+            ))}
         </MapContainer>
     );
 };

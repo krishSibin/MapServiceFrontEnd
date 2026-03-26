@@ -37,19 +37,26 @@ function App() {
     return () => socket.disconnect();
   }, []);
 
-  const stats = [
+  // Memoize visible layers to prevent unnecessary MapView re-renders
+  const filteredLayers = React.useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(layers).filter(([name]) => visibleLayers.includes(name))
+    );
+  }, [layers, visibleLayers]);
+
+  const stats = React.useMemo(() => [
     { label: "Flooded Area", value: "3250", unit: "ha", icon: Waves, color: "#38bdf8" },
     { label: "Crops Affected", value: "1800", unit: "ha", icon: Sprout, color: "#10b981" },
     { label: "Roads Impacted", value: "12", unit: "", icon: MapPin, color: "#fb923c" },
     { label: "Villages Affected", value: "8", unit: "", icon: Home, color: "#f43f5e" }
-  ];
+  ], []);
 
   /* ---------------- HANDLERS ---------------- */
   const handleSelect = React.useCallback((feature) => {
     setSelectedFeature(feature);
   }, []);
 
-  const handleSearchPanchayat = (panchayatName) => {
+  const handleSearchPanchayat = React.useCallback((panchayatName) => {
     if (!layers.panchayat) return;
     const feature = layers.panchayat.features.find(
       f => f.properties.PANCHAYAT?.toLowerCase() === panchayatName.toLowerCase()
@@ -58,18 +65,18 @@ function App() {
       setSearchTarget({ ...feature, _searchId: Date.now() });
       setIsDrawerOpen(false);
     }
-  };
+  }, [layers.panchayat]);
 
   const clearSearchTarget = React.useCallback(() => {
     setSearchTarget(null);
   }, []);
 
-  const getRiskColor = (dn) => {
-    if (dn >= 4) return "#ef4444"
-    if (dn === 3) return "#fb923c"
-    if (dn === 2) return "#eab308"
-    return "#22c55e"
-  }
+  const getRiskColor = React.useCallback((dn) => {
+    if (dn >= 4) return "#ef4444";
+    if (dn === 3) return "#fb923c";
+    if (dn === 2) return "#eab308";
+    return "#22c55e";
+  }, []);
 
   return (
     <div className="app-container">
@@ -118,11 +125,7 @@ function App() {
 
           <MapView
             theme={mapTheme}
-            layers={
-              Object.fromEntries(
-                Object.entries(layers).filter(([name]) => visibleLayers.includes(name))
-              )
-            }
+            layers={filteredLayers}
             riskFilter={riskFilter}
             searchTarget={searchTarget}
             selectedFeature={selectedFeature}

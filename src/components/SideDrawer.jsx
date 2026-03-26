@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves, Sprout, MapPin, Home } from 'lucide-react';
 
 const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilter, visibleLayers, setVisibleLayers }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredPanchayats = layers?.panchayat?.features
-        ? layers.panchayat.features
-            .map(f => f.properties.PANCHAYAT)
-            .filter(name => name?.toLowerCase().includes(searchTerm.toLowerCase()))
-            .slice(0, 10)
-        : [];
+    const filteredPanchayats = useMemo(() => {
+        if (!layers?.panchayat?.features) return [];
 
-    const toggleLayer = (layerName) => {
-        if (visibleLayers.includes(layerName)) {
-            setVisibleLayers(visibleLayers.filter(l => l !== layerName));
-        } else {
-            setVisibleLayers([...visibleLayers, layerName]);
-        }
-    };
+        const term = searchTerm.toLowerCase();
+        // Extract names once
+        const names = layers.panchayat.features.map(f => f.properties.PANCHAYAT).filter(Boolean);
+
+        if (!term) return names.slice(0, 10);
+
+        return names
+            .filter(name => name.toLowerCase().includes(term))
+            .slice(0, 10);
+    }, [layers?.panchayat?.features, searchTerm]);
+
+    const toggleLayer = useCallback((layerName) => {
+        setVisibleLayers(prev =>
+            prev.includes(layerName)
+                ? prev.filter(l => l !== layerName)
+                : [...prev, layerName]
+        );
+    }, [setVisibleLayers]);
 
     const layerItems = [
         { id: 'panchayat', label: 'Land Boundaries', icon: MapIcon, color: '#38bdf8' },
@@ -140,4 +147,4 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
     );
 };
 
-export default SideDrawer;
+export default React.memo(SideDrawer);
