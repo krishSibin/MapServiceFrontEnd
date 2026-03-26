@@ -164,9 +164,9 @@ function App() {
               <div className="overlay-header">
                 <div className="title-group">
                   <span className="source-tag">
-                    {selectedFeature.properties.PANCHAYAT ? 'ADMINISTRATIVE AREA' : 'FLOOD ANALYSIS'}
+                    {selectedFeature.properties.PANCHAYAT ? 'ADMINISTRATIVE AREA' : (selectedFeature._layerName || 'ANALYSIS AREA').toUpperCase()}
                   </span>
-                  <h3>{selectedFeature.properties.PANCHAYAT || `Risk Zone (DN: ${selectedFeature.properties.DN})`}</h3>
+                  <h3>{selectedFeature.properties.PANCHAYAT || `Feature Details`}</h3>
                 </div>
                 <button className="close-overlay" onClick={() => setSelectedFeature(null)}>
                   ×
@@ -191,13 +191,15 @@ function App() {
                   <>
                     <div className="info-grid">
                       <div className="info-item">
-                        <label>Risk Index</label>
-                        <span style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</span>
+                        <label>Category</label>
+                        <span className="capitalize">{selectedFeature._layerName || 'Analysis Layer'}</span>
                       </div>
-                      <div className="info-item">
-                        <label>Severity</label>
-                        <span>{selectedFeature.properties.DN >= 4 ? 'CRITICAL' : selectedFeature.properties.DN === 3 ? 'HIGH' : 'MODERATE'}</span>
-                      </div>
+                      {selectedFeature.properties.DN !== undefined && (
+                        <div className="info-item">
+                          <label>Risk Index (DN)</label>
+                          <span style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</span>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -210,9 +212,11 @@ function App() {
         {selectedFeature && (
           <div className="mobile-selection-card mobile-only">
             <div className="card-header">
-              <span className="source-tag">{selectedFeature.properties.PANCHAYAT ? 'PANCHAYAT ANALYSIS' : 'FLOOD RISK'}</span>
+              <span className="source-tag">
+                {selectedFeature.properties.PANCHAYAT ? 'PANCHAYAT ANALYSIS' : (selectedFeature._layerName || 'DATA ANALYSIS').toUpperCase()}
+              </span>
               <div className="header-main">
-                <h3>{selectedFeature.properties.PANCHAYAT || `Risk Level ${selectedFeature.properties.DN}`}</h3>
+                <h3>{selectedFeature.properties.PANCHAYAT || `Feature Info`}</h3>
                 <button className="close-btn" onClick={() => setSelectedFeature(null)}>×</button>
               </div>
             </div>
@@ -231,13 +235,15 @@ function App() {
               ) : (
                 <div className="mobile-info-row">
                   <div className="mobile-info-col">
-                    <label>Severity</label>
-                    <p style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN >= 4 ? 'CRITICAL' : 'MODERATE'}</p>
+                    <label>Layer</label>
+                    <p className="capitalize">{selectedFeature._layerName}</p>
                   </div>
-                  <div className="mobile-info-col">
-                    <label>Action</label>
-                    <p>High Alert</p>
-                  </div>
+                  {selectedFeature.properties.DN !== undefined && (
+                    <div className="mobile-info-col">
+                      <label>Risk DN</label>
+                      <p style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

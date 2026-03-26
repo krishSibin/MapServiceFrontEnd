@@ -9,8 +9,15 @@ const MapController = ({ searchTarget, onSearchComplete }) => {
 
     useEffect(() => {
         if (searchTarget && searchTarget.geometry) {
-            const bounds = L.geoJSON(searchTarget).getBounds();
-            map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+            try {
+                const layer = L.geoJSON(searchTarget);
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    map.flyToBounds(bounds, { padding: [50, 50], duration: 1.5 });
+                }
+            } catch (err) {
+                console.warn("Bounds error:", err);
+            }
             if (onSearchComplete) onSearchComplete();
         }
     }, [searchTarget, map, onSearchComplete]);
@@ -78,25 +85,35 @@ const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete 
             <MapController searchTarget={searchTarget} onSearchComplete={onSearchComplete} />
 
             {Object.entries(layers).map(([name, data]) => {
-                if (!data) return null;
+                if (!data || !data.features) return null;
 
-                // Apply risk filter to flood layer
+                // Apply risk filter safely to any layer that has a DN property
                 let filteredData = data;
-                if (name === "flood" && riskFilter !== "all") {
+                if (riskFilter !== "all") {
                     filteredData = {
                         ...data,
-                        features: data.features.filter(f => f.properties.DN.toString() === riskFilter)
+                        features: data.features.filter(f => {
+                            const dn = f.properties?.DN;
+                            // Only filter if the feature has a DN property
+                            if (dn !== undefined && dn !== null) {
+                                return dn.toString() === riskFilter;
+                            }
+                            return true; // Keep features without DN (like boundaries) visible
+                        })
                     };
                 }
 
                 return (
                     <GeoJSON
-                        key={`${name}-${riskFilter}`}
+                        key={`${name}-${riskFilter}-${data.features.length}`}
                         data={filteredData}
                         style={(f) => getStyle(name, f)}
                         onEachFeature={(feature, layer) => {
                             layer.on({
-                                click: () => onSelect && onSelect(feature)
+                                click: () => {
+                                    // Add layer metadata before selecting
+                                    onSelect && onSelect({ ...feature, _layerName: name });
+                                }
                             });
                         }}
                     />
