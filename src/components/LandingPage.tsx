@@ -283,7 +283,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
             className={`p-3 md:p-12 min-h-[200px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
-                ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.25)]'
+                ? (isSoon ? 'border-amber-500 bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(245,158,11,0.2)]' : 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.2)]')
                 : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-neutral-900/40'
                 }`}
         >
@@ -304,7 +304,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                 initial={false}
                 animate={{ opacity: isSelected ? 1 : 0, scaleX: isSelected ? 1 : 0 }}
                 transition={{ duration: 1, ease: [0.13, 1, 0.32, 1] }}
-                className={`absolute bottom-0 left-12 right-12 h-[2px] rounded-full z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-8px_15px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-8px_15px_rgba(0,207,191,0.8)]'}`}
+                className={`absolute bottom-0 left-6 md:left-12 right-6 md:right-12 h-[2px] rounded-full z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-8px_15px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-8px_15px_rgba(0,207,191,0.8)]'}`}
             />
 
             <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
@@ -327,7 +327,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                     initial={false}
                     animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 10 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-center md:justify-between gap-3 md:gap-0 w-full"
                 >
                     <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
                         {isSoon ? 'Coming Soon' : 'Active'}
