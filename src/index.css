@@ -1,133 +1,108 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), "Outfit", ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
 
 :root {
-  --bg-primary: #020617;
-  --bg-secondary: rgba(15, 23, 42, 0.7);
-  --accent-blue: #38bdf8;
-  --accent-red: #f43f5e;
-  --accent-orange: #fb923c;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(0.94 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.5 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0 0 0);
+  --accent: oklch(0.8 0 0);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.5 0 0);
+  --input: oklch(1 0 0);
+  --ring: oklch(0 0 0 / 0.2);
+  --radius: 0.5rem;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.dark {
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.1 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.3 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.3 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.3 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.3 0 0);
+  --ring: oklch(1 0 0 / 0.2);
 }
 
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  overflow-x: hidden;
-  overflow-y: auto;
-  min-height: 100vh;
-  width: 100vw;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
 }
 
-#root {
-  height: 100%;
-  width: 100%;
-}
-
-/* Custom Scrollbar for Dashboard Panels */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* Leaflet Customizations */
+/* Map Specific Styles (Preserved) */
 .leaflet-container {
   background: #0b1120 !important;
 }
 
 .custom-popup .leaflet-popup-content-wrapper {
-  background: var(--bg-secondary) !important;
-  color: var(--text-primary) !important;
+  background: var(--card) !important;
+  color: var(--foreground) !important;
   backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 8px;
 }
 
-.custom-popup .leaflet-popup-tip {
-  background: var(--bg-secondary) !important;
-}
-
-/* Floating Info Box for large GeoJSON performance */
-.info-box {
-  position: absolute;
-  top: 80px;
-  right: 20px;
-  z-index: 1000;
-  background: var(--bg-secondary);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 20px;
-  min-width: 260px;
-  box-shadow: var(--glass-shadow);
-  pointer-events: none;
-  animation: slideIn 0.3s ease-out;
-  transition: all 0.3s ease;
-}
-
-.info-box h3 {
-  margin-bottom: 8px;
-  font-size: 1.1rem;
-  color: var(--accent-blue);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.info-box .data-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-}
-
-.info-box .label {
-  color: var(--text-secondary);
-}
-
-.info-box .value {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.info-box .risk-tag {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  margin-top: 10px;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.map-info-overlay {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
 }

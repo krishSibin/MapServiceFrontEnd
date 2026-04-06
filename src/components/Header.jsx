@@ -5,8 +5,8 @@ const Header = ({ onOpenMenu }) => {
     return (
         <header className="dashboard-header">
             <div className="logo-section">
-                <div className="logo-icon-container">
-                    <ShieldAlert className="logo-icon pulse-red" size={28} />
+                <div className="logo-icon-container overflow-hidden rounded-lg bg-white p-0.5">
+                    <img src="/nexira-spatial-logo.jpg" alt="Nexira Spatial Logo" className="w-[28px] h-[28px] object-contain" />
                 </div>
                 <h1 className="text-xl font-bold tracking-tight">
                     Real-Time <span className="text-blue-400">Flood</span> Monitoring System

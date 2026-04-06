@@ -80,7 +80,7 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
     );
 });
 
-const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete }) => {
+const MapView = ({ theme, layers, riskFilter, searchTarget, onSelect, onSearchComplete }) => {
 
     const getStyle = (layerName, feature) => {
         if (layerName === "flood") {
@@ -129,6 +129,10 @@ const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete 
         return { color: "#94a3b8", weight: 1, fillOpacity: 0.1 };
     };
 
+    const tileUrl = theme === 'light'
+        ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
     return (
         <MapContainer
             center={[10.2, 76.45]}
@@ -139,7 +143,7 @@ const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete 
             zoomDelta={0.5}
             wheelPxPerZoomLevel={120} // Make zooming feel smoother
         >
-            <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+            <TileLayer url={tileUrl} />
 
             <MapController searchTarget={searchTarget} onSearchComplete={onSearchComplete} />
 

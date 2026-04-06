@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves, Sprout, MapPin, Home } from 'lucide-react';
+import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves, Sprout, MapPin, Home, MapPinned } from 'lucide-react';
 
 const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilter, visibleLayers, setVisibleLayers }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +28,7 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
 
     const layerItems = [
         { id: 'panchayat', label: 'Land Boundaries', icon: MapIcon, color: '#38bdf8' },
+        { id: 'boundary', label: 'Admin Boundaries', icon: MapPinned, color: '#a855f7' },
         { id: 'flood', label: 'Flood Risk (DN)', icon: Waves, color: '#ef4444' },
         { id: 'crop', label: 'Agricultural Areas', icon: Sprout, color: '#10b981' },
         { id: 'roads', label: 'Road Infrastructure', icon: MapPin, color: '#fb923c' },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Header from './components/Header';
 import SideDrawer from './components/SideDrawer';
+import LandingPage from './components/LandingPage';
 import { io } from "socket.io-client";
 import {
   Waves,
@@ -20,6 +21,7 @@ import './App.css';
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 function App() {
+  const [hasStarted, setHasStarted] = useState(false);
   const [mapTheme, setMapTheme] = useState('dark');
   const [riskFilter, setRiskFilter] = useState('all');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -77,6 +79,10 @@ function App() {
     if (dn === 2) return "#eab308";
     return "#22c55e";
   }, []);
+
+  if (!hasStarted) {
+    return <LandingPage onStart={() => setHasStarted(true)} />;
+  }
 
   return (
     <div className="app-container">

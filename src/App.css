@@ -1,4 +1,16 @@
 .app-container {
+  /* Unified Nexira Theme */
+  --bg-primary: #080a0f;
+  --bg-secondary: #11151c;
+  --bg-glass: rgba(17, 21, 28, 0.7);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --glass-border: rgba(0, 207, 191, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --accent-blue: #00cfbf;
+  --accent-red: #ff4b5c;
+  --accent-orange: #ff9f43;
+
   height: 100vh;
   width: 100vw;
   display: grid;
@@ -6,36 +18,53 @@
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow: hidden;
-  transition: background 0.5s ease, transform 0.5s ease;
+  transition: all 0.4s ease;
   position: relative;
-  /* Fixed: Enable absolute positioning for children */
 }
 
+/* Mode removed since the deep navy theme natively contrasts perfectly against the white map and keeps colors consistent */
+
+/* Soft 'Cloud' Light Theme */
 .light-theme {
   --bg-primary: #f1f5f9;
-  --bg-secondary: rgba(255, 255, 255, 0.9);
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  /* Soft slate-grey */
+  --bg-secondary: rgba(224, 242, 254, 0.6);
+  /* Translucent light sky blue */
+  --bg-glass: rgba(240, 249, 255, 0.75);
+  /* Frosty light blue glass */
+  --text-primary: #1e293b;
+  /* Deep slate for readability */
+  --text-secondary: #64748b;
+  /* Muted slate */
+  --glass-border: rgba(56, 189, 248, 0.2);
+  /* Subtle blue border */
+  --glass-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
 }
 
 .light-theme .leaflet-container {
-  background: #f8fafc !important;
+  background: #f4f3f0 !important;
 }
 
-.light-theme .stat-card {
-  background: white;
-  border-color: rgba(0, 0, 0, 0.05);
+/* Base Header Adjustment */
+.app-header {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.4s ease;
 }
 
-.light-theme .theme-toggle,
-.light-theme .map-legend,
-.light-theme .widget-card,
-.light-theme .data-input-panel {
-  background: white;
-  border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+.app-header h1 {
+  color: var(--text-primary);
+}
+
+/* Header Blending */
+.app-header {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.4s ease;
+  z-index: 2000;
 }
 
 .dashboard-header {
@@ -88,9 +117,9 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.5));
+  background: var(--bg-secondary);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   align-items: center;
@@ -99,19 +128,17 @@
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   border-color: var(--accent-blue);
 }
 
 .stat-icon-wrapper {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(56, 189, 248, 0.1);
-  color: var(--accent-blue);
+  background: transparent !important;
 }
 
 .stat-info {
@@ -262,9 +289,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--glass-border);
-  z-index: 2000;
 }
 
 .logo-section {
@@ -441,6 +465,20 @@
   left: 0;
 }
 
+.floating-legend {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 1000;
+  background: var(--bg-glass) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border) !important;
+  padding: 1.25rem;
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow);
+  color: var(--text-primary);
+}
+
 .main-map {
   height: 100%;
   width: 100%;
@@ -551,7 +589,6 @@
   text-decoration: none;
 }
 
-/* --- MOBILE RESPONSIVENESS --- */
 @media (max-width: 1024px) {
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
@@ -585,7 +622,7 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    max-width: 60%;
+    max-width: 50%;
   }
 
   .logo-section h1 {
@@ -611,6 +648,15 @@
     /* Icon only on tiny mobile header */
   }
 
+  .drawer-trigger-btn {
+    padding: 0.3rem 0.6rem;
+    min-width: max-content;
+  }
+
+  .drawer-trigger-btn span {
+    font-size: 0.6rem !important;
+  }
+
   .stats-row {
     grid-template-columns: repeat(4, 1fr);
     padding: 0.25rem 0.5rem;
@@ -619,11 +665,11 @@
 
   .stat-card {
     flex-direction: column;
-    padding: 0.4rem 0.25rem;
-    gap: 0.25rem;
+    padding: 0.4rem 0.15rem;
+    gap: 0.2rem;
     border-radius: 8px;
     text-align: center;
-    background: rgba(15, 23, 42, 0.4);
+    background: var(--bg-secondary);
   }
 
   .stat-icon-wrapper {
@@ -647,7 +693,7 @@
   }
 
   .stat-label {
-    font-size: 0.55rem;
+    font-size: 0.45rem;
     text-align: center;
     line-height: 1.1;
   }
@@ -671,99 +717,65 @@
   .bottom-widgets {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    padding: 0 0.5rem 1rem 0.5rem;
+    padding: 0 0.5rem 0.5rem 0.5rem;
     gap: 0.4rem;
   }
 
   .widget-card {
-    padding: 0.6rem;
+    padding: 0.4rem;
+    gap: 0.4rem;
     border-radius: 12px;
-    overflow: hidden;
   }
 
   .widget-card .panel-header {
-    gap: 0.25rem;
+    gap: 0.2rem;
   }
 
   .widget-card .panel-header span {
-    font-size: 0.55rem !important;
-    letter-spacing: 0.2px;
+    font-size: 0.45rem !important;
+    letter-spacing: 0px;
   }
 
   .widget-card .panel-header svg {
-    width: 12px;
-    height: 12px;
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  .widget-card p {
+    font-size: 0.4rem !important;
+    margin-top: 0.1rem;
   }
 
   .chart-placeholder {
-    height: 100px;
-    font-size: 0.75rem;
+    height: 50px;
   }
 
   .chart-bars {
-    height: 40px;
-    gap: 3px;
+    height: 35px;
+    gap: 2px;
   }
 
   .chart-bar {
-    width: 12px;
+    width: 8px;
   }
 
   .infra-list {
-    gap: 0.25rem;
+    gap: 0.2rem;
   }
 
   .infra-item {
-    font-size: 0.5rem !important;
+    font-size: 0.4rem !important;
     padding-bottom: 0.15rem;
   }
 
   .infra-status {
+    font-size: 0.35rem !important;
     padding: 1px 2px;
-    font-size: 0.4rem !important;
-  }
-
-  .widget-card p {
-    font-size: 0.5rem !important;
-    margin-top: 0.2rem;
   }
 
   .theme-toggle {
-    top: 0.25rem;
-    right: 0.25rem;
-    scale: 0.7;
-  }
-
-  .map-legend {
-    bottom: 0.25rem;
-    left: 0.25rem;
-    padding: 0.4rem;
-    font-size: 0.55rem;
-    max-width: 140px;
-  }
-
-  .drawer-trigger-btn {
-    padding: 0.4rem 0.6rem;
-    min-width: max-content;
-  }
-
-  .side-drawer {
-    width: 280px !important;
-    right: -300px !important;
-  }
-
-  .side-drawer.open {
-    right: 0 !important;
-  }
-
-  .drawer-trigger-btn span {
-    font-size: 0.6rem !important;
-  }
-
-  .data-input-panel {
-    width: calc(100% - 2rem);
-    right: 1rem;
     top: 3.5rem;
+    scale: 0.8;
   }
 }
 
@@ -791,21 +803,23 @@
 .side-drawer {
   position: fixed;
   top: 0;
-  right: -400px;
+  right: 0;
+  transform: translateX(120%);
   width: 360px;
   height: 100vh;
   background: var(--bg-secondary);
   backdrop-filter: blur(20px);
+  will-change: transform;
   border-left: 1px solid var(--glass-border);
   z-index: 3000;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
   flex-direction: column;
   box-shadow: -20px 0 50px rgba(0, 0, 0, 0.3);
 }
 
 .side-drawer.open {
-  right: 0;
+  transform: translateX(0);
 }
 
 .drawer-header {
@@ -1019,14 +1033,19 @@
   top: 2rem;
   right: 2rem;
   width: 320px;
-  background: rgba(15, 23, 42, 0.85);
+  background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--accent-blue);
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   z-index: 2000;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--glass-shadow);
   animation: slideLeft 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow: hidden;
+  color: var(--text-primary);
+}
+
+.light-theme .map-info-overlay {
+  border-color: var(--accent-blue);
 }
 
 @keyframes slideLeft {
@@ -1064,7 +1083,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
   line-height: 1.2;
 }
 
@@ -1111,7 +1130,7 @@
 .info-item span {
   font-size: 1rem;
   font-weight: 600;
-  color: white;
+  color: var(--text-primary);
 }
 
 .impact-summary {
@@ -1174,26 +1193,19 @@
   box-shadow: 0 0 10px #10b981;
 }
 
-/* Light theme support */
-.light-theme .map-info-overlay {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: #38bdf8;
-  color: #0f172a;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
+/* Clean up old Light theme support */
 .light-theme .overlay-header h3,
 .light-theme .info-item span {
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .light-theme .impact-summary {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .light-theme .close-overlay {
   background: rgba(0, 0, 0, 0.05);
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 @media (max-width: 768px) {
@@ -1393,4 +1405,73 @@
 
 .light-theme .layer-toggle-row.active {
   background: #e0f2fe;
+}
+
+/* Map Loading Overlay Styles */
+.map-loading-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2500;
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  padding: 1.5rem 2.5rem;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.map-loading-overlay.fade-out {
+  opacity: 0;
+  transform: translate(-50%, -40%) scale(0.9);
+  pointer-events: none;
+}
+
+.map-loading-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner-ring {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(56, 189, 248, 0.2);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.map-loading-text {
+  animation: mapTxtPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes mapTxtPulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+  }
+
+  100% {
+    opacity: 0.6;
+  }
 }
