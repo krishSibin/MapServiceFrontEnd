@@ -127,7 +127,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <h1 className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
                             Intelligence, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
                         </h1>
-                        <p className="text-lg md:text-2xl text-neutral-400 max-w-2xl mx-auto leading-relaxed font-medium text-balance opacity-60">
+                        <p className="text-xs md:text-2xl text-neutral-400 max-w-[280px] md:max-w-2xl mx-auto leading-relaxed font-medium text-balance opacity-60 mt-4 md:mt-0">
                             The world's most advanced spatial analytics engine for high-fidelity asset monitoring.
                         </p>
                     </motion.div>
@@ -135,10 +135,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     {/* Globe Container - Zero-Clipping Framing */}
                     <motion.div
                         style={{ scale: globeScale, opacity: globeOpacity, y: globeY }}
-                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pt-10 md:pt-20 will-change-transform"
+                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pt-0 md:pt-20 will-change-transform"
                     >
-                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[100px] md:blur-[200px] rounded-full scale-100 md:scale-75"></div>
-                        <RotatingEarth width={window.innerWidth < 768 ? 600 : 1000} height={window.innerWidth < 768 ? 600 : 1000} className="max-w-[100vw] max-h-screen" />
+                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[80px] md:blur-[200px] rounded-full scale-110 md:scale-75"></div>
+                        <RotatingEarth width={window.innerWidth < 768 ? 550 : 1000} height={window.innerWidth < 768 ? 550 : 1000} className="max-w-[100vw] max-h-screen" />
                     </motion.div>
 
                     {/* Scroll Indicator / Minimalist 'Skip' Cue */}
@@ -146,11 +146,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 2 }}
-                        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-neutral-500"
+                        className="absolute bottom-12 md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-neutral-500"
                     >
-                        <span className="text-[10px] font-black uppercase tracking-[0.4em]">Scroll to Explore</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em]">Explore</span>
                         <motion.div
-                            animate={{ y: [0, 10, 0] }}
+                            animate={{ y: [0, 6, 0] }}
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         >
                             <ArrowRight className="w-4 h-4 rotate-90 opacity-50" />
@@ -283,7 +283,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             onClick={onClick}
             className={`p-4 md:p-12 min-h-[300px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
                 ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.25)]'
-                : 'border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-neutral-900/20'
+                : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-neutral-900/40'
                 }`}
         >
             {/* Smooth Atmospheric Selection Sweep */}
@@ -297,12 +297,6 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                     style={{ mixBlendMode: 'screen', skewX: '-30deg' }}
                 />
             )}
-
-            {/* Active Marker - Top Bar */}
-            <div className={`absolute top-0 left-0 right-0 h-1.5 transition-all duration-700 ${isSelected
-                ? (isSoon ? 'bg-amber-500 opacity-100 shadow-[0_0_20px_rgba(245,158,11,0.5)]' : 'bg-[#00cfbf] opacity-100 shadow-[0_0_20px_rgba(0,207,191,0.5)]')
-                : 'bg-transparent opacity-0'}`}
-            />
 
             {/* Active Marker - Persistent Bottom Glow (Retained after wave) */}
             <motion.div
