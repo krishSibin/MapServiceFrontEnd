@@ -118,10 +118,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <section ref={heroRef} className="relative h-[120vh] z-10">
                 <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-6 pt-20">
                     <motion.div
-                        initial={{ y: 0, opacity: 0 }}
-                        animate={{ y: -80, opacity: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         style={{ opacity: heroOpacity, y: heroY }}
-                        className="z-20 text-center px-4"
+                        className="z-20 text-center px-4 relative top-[-4vh] md:top-[-6vh]"
                     >
                         <div className="inline-block px-2 md:px-4 py-0.5 md:py-1 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-4 md:mb-8 text-[#00cfbf]">
                             Global Infrastructure v2.0
@@ -137,12 +137,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     {/* Globe Container - Zero-Clipping Framing */}
                     <motion.div
                         style={{ scale: globeScale, opacity: globeOpacity, y: globeY }}
-                        initial={{ y: 0 }}
-                        animate={{ y: -60 }}
-                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none will-change-transform"
+                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none will-change-transform top-[-2vh] md:top-[-4vh]"
                     >
                         <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[80px] md:blur-[200px] rounded-full scale-110 md:scale-75"></div>
-                        <RotatingEarth width={window.innerWidth < 768 ? 680 : 1100} height={window.innerWidth < 768 ? 680 : 1100} className="max-w-[100vw]" />
+                        <RotatingEarth width={window.innerWidth < 768 ? 680 : 900} height={window.innerWidth < 768 ? 680 : 900} className="max-w-[100vw] max-h-screen" />
                     </motion.div>
 
                     <motion.div
