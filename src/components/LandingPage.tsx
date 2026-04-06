@@ -145,16 +145,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <RotatingEarth width={window.innerWidth < 768 ? 680 : 1100} height={window.innerWidth < 768 ? 680 : 1100} className="max-w-[100vw]" />
                     </motion.div>
 
-                    {/* Scroll Indicator / Minimalist 'Skip' Cue */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 2 }}
-                        className="absolute bottom-12 md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-neutral-500"
+                        className="absolute bottom-[18%] md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-neutral-500"
                     >
-                        <span className="text-[10px] font-black uppercase tracking-[0.4em]">Explore</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em]">Explore</span>
                         <motion.div
-                            animate={{ y: [0, 6, 0] }}
+                            animate={{ y: [0, 4, 0] }}
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         >
                             <ArrowRight className="w-4 h-4 rotate-90 opacity-50" />
@@ -192,7 +191,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 </div>
 
                 <div className="flex flex-col items-center w-full relative z-10">
-                    <div className="text-center mb-20">
+                    <div className="text-center mb-12 md:mb-20">
                         <motion.h2
                             variants={{
                                 hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
@@ -203,16 +202,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                     transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] }
                                 }
                             }}
-                            className="text-4xl md:text-6xl font-outfit font-black tracking-tighter mb-4"
+                            className="text-3xl md:text-6xl font-outfit font-black tracking-tighter mb-3 md:mb-4"
                         >
                             Select Your <span className="text-[#00cfbf]">Interface.</span>
                         </motion.h2>
-                        <p className="text-neutral-400 max-w-xl mx-auto text-lg md:text-xl font-medium tracking-tight opacity-60">
+                        <p className="text-neutral-400 max-w-xl mx-auto text-sm md:text-xl font-medium tracking-tight opacity-60">
                             Deploy specialized mission-critical monitoring systems tailored to the objective.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 w-full">
                         {dashboards.map((db) => (
                             <FeatureCard
                                 key={db.id}
@@ -237,10 +236,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 className="relative z-30 min-h-screen flex flex-col items-center justify-center text-center border-t border-white/5 bg-gradient-to-b from-transparent to-neutral-950 px-6"
             >
                 <div className="flex flex-col items-center justify-center flex-grow">
-                    <div className="inline-block px-3 py-1 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-8 md:mb-12 text-[#00cfbf] animate-pulse">
-                        Geospatial Engine v2.0
+                    <div className="inline-block px-3 py-1 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-6 md:mb-12 text-[#00cfbf] animate-pulse">
+                        Engine v2.0
                     </div>
-                    <h2 className="text-6xl md:text-[10rem] font-outfit font-black mb-16 tracking-tighter leading-[0.8] uppercase text-gradient-premium">
+                    <h2 className="text-4xl md:text-[10rem] font-outfit font-black mb-8 md:mb-16 tracking-tighter leading-[0.85] uppercase text-gradient-premium">
                         MAP THE <br /> <span className="text-[#00cfbf]">UNSEEN DATA.</span>
                     </h2>
                     <button
@@ -285,7 +284,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             whileHover={{ y: -8, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`p-4 md:p-12 min-h-[240px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
+            className={`p-3 md:p-12 min-h-[200px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
                 ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.25)]'
                 : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-neutral-900/40'
                 }`}
@@ -307,7 +306,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                 initial={false}
                 animate={{ opacity: isSelected ? 1 : 0, scaleX: isSelected ? 1 : 0 }}
                 transition={{ duration: 1, ease: [0.13, 1, 0.32, 1] }}
-                className={`absolute bottom-0 left-0 right-0 h-[3px] z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-10px_25px_rgba(245,158,11,1)]' : 'bg-[#00cfbf] shadow-[0_-10px_25px_rgba(0,207,191,1)]'}`}
+                className={`absolute bottom-0 left-12 right-12 h-[2px] rounded-full z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-8px_15px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-8px_15px_rgba(0,207,191,0.8)]'}`}
             />
 
             <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
