@@ -118,6 +118,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             <section ref={heroRef} className="relative h-[120vh] z-10">
                 <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-6 pt-20">
                     <motion.div
+                        initial={{ y: 0, opacity: 0 }}
+                        animate={{ y: -80, opacity: 1 }}
                         style={{ opacity: heroOpacity, y: heroY }}
                         className="z-20 text-center px-4"
                     >
@@ -135,10 +137,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     {/* Globe Container - Zero-Clipping Framing */}
                     <motion.div
                         style={{ scale: globeScale, opacity: globeOpacity, y: globeY }}
-                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pt-0 md:pt-20 will-change-transform"
+                        initial={{ y: 0 }}
+                        animate={{ y: -60 }}
+                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none will-change-transform"
                     >
                         <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[80px] md:blur-[200px] rounded-full scale-110 md:scale-75"></div>
-                        <RotatingEarth width={window.innerWidth < 768 ? 550 : 1000} height={window.innerWidth < 768 ? 550 : 1000} className="max-w-[100vw] max-h-screen" />
+                        <RotatingEarth width={window.innerWidth < 768 ? 680 : 1100} height={window.innerWidth < 768 ? 680 : 1100} className="max-w-[100vw]" />
                     </motion.div>
 
                     {/* Scroll Indicator / Minimalist 'Skip' Cue */}
@@ -281,7 +285,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             whileHover={{ y: -8, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`p-4 md:p-12 min-h-[300px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
+            className={`p-4 md:p-12 min-h-[240px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
                 ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.25)]'
                 : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-neutral-900/40'
                 }`}
@@ -292,7 +296,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                     key={`sweep-${title}`}
                     initial={{ x: "-120%" }}
                     animate={{ x: "200%" }}
-                    transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
                     className={`absolute inset-y-0 w-64 blur-[100px] opacity-20 z-30 pointer-events-none ${isSoon ? 'bg-amber-500' : 'bg-[#00cfbf]'}`}
                     style={{ mixBlendMode: 'screen', skewX: '-30deg' }}
                 />
@@ -302,13 +306,13 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             <motion.div
                 initial={false}
                 animate={{ opacity: isSelected ? 1 : 0, scaleX: isSelected ? 1 : 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className={`absolute bottom-0 left-6 md:left-12 right-6 md:right-12 h-[2px] z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-10px_20px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-10px_20px_rgba(0,207,191,0.8)]'}`}
+                transition={{ duration: 1, ease: [0.13, 1, 0.32, 1] }}
+                className={`absolute bottom-0 left-0 right-0 h-[3px] z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-10px_25px_rgba(245,158,11,1)]' : 'bg-[#00cfbf] shadow-[0_-10px_25px_rgba(0,207,191,1)]'}`}
             />
 
-            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-8 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
+            <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
                 }`}>
-                {React.cloneElement(icon, { className: "w-8 h-8 md:w-10 md:h-10" } as any)}
+                {React.cloneElement(icon, { className: "w-6 h-6 md:w-10 md:h-10" } as any)}
             </div>
 
             <h3 className={`text-xl md:text-4xl font-outfit font-black tracking-tighter mb-2 md:mb-6 uppercase transition-colors ${isSelected ? 'text-white' : 'text-neutral-700'
@@ -321,17 +325,17 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             </p>
 
             {/* Stable Footer - Always rendered to prevent height jumps */}
-            <div className="mt-auto w-full pt-6 md:pt-10">
+            <div className="mt-auto w-full pt-4 md:pt-10">
                 <motion.div
                     initial={false}
                     animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 10 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-center justify-between"
                 >
-                    <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
-                        {isSoon ? 'Interface Soon' : 'Active'}
+                    <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
+                        {isSoon ? 'Coming Soon' : 'Active'}
                     </span>
-                    <ArrowRight className={`w-4 h-4 md:w-6 md:h-6 ${isSoon ? 'text-amber-500 opacity-50' : 'text-[#00cfbf]'}`} />
+                    <ArrowRight className={`w-3 h-3 md:w-6 md:h-6 ${isSoon ? 'text-amber-500 opacity-50' : 'text-[#00cfbf]'}`} />
                 </motion.div>
             </div>
         </motion.div>
