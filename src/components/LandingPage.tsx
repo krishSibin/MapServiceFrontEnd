@@ -93,21 +93,21 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             </div>
 
             {/* Global Navbar */}
-            <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-6 md:px-12 py-5 backdrop-blur-xl bg-black/40 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center btn-glow overflow-hidden p-1">
+            <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-4 md:px-12 py-4 md:py-5 backdrop-blur-xl bg-black/40 border-b border-white/5">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-lg md:rounded-xl flex items-center justify-center btn-glow overflow-hidden p-1">
                         <img src="/nexira-spatial-logo.jpg" alt="Nexira Spatial Logo" className="w-full h-full object-contain" />
                     </div>
-                    <span className="text-xl md:text-2xl font-outfit font-black uppercase tracking-tighter">Nexira <span className="text-[#00cfbf]">Spatial</span></span>
+                    <span className="text-lg md:text-2xl font-outfit font-black uppercase tracking-tighter">Nexira <span className="text-[#00cfbf]">Spatial</span></span>
                 </div>
 
-                <div className="flex items-center gap-6">
-                    <span className="hidden md:block text-[10px] font-black uppercase tracking-[0.2em] text-[#00cfbf]">Ready for {selectedId.replace('-', ' ')}</span>
+                <div className="flex items-center gap-4 md:gap-6">
+                    <span className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-[#00cfbf]">Ready for {selectedId.replace('-', ' ')}</span>
                     <button
                         onClick={onStart}
-                        className="px-6 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
+                        className="px-4 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold text-sm md:text-base transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
                     >
-                        <span className="relative z-10">Launch Platform</span>
+                        <span className="relative z-10">Launch</span>
                         <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     </button>
@@ -119,15 +119,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-6 pt-20">
                     <motion.div
                         style={{ opacity: heroOpacity, y: heroY }}
-                        className="z-20 text-center"
+                        className="z-20 text-center px-4"
                     >
-                        <div className="inline-block px-4 py-1.5 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-[#00cfbf]">
+                        <div className="inline-block px-2 md:px-4 py-0.5 md:py-1 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-4 md:mb-8 text-[#00cfbf]">
                             Global Infrastructure v2.0
                         </div>
-                        <h1 className="text-6xl md:text-[8rem] font-outfit font-black tracking-tighter leading-[0.85] mb-10 text-gradient-premium">
+                        <h1 className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
                             Intelligence, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
                         </h1>
-                        <p className="text-xl md:text-2xl text-neutral-400 max-w-2xl mx-auto leading-relaxed font-medium text-balance opacity-60">
+                        <p className="text-lg md:text-2xl text-neutral-400 max-w-2xl mx-auto leading-relaxed font-medium text-balance opacity-60">
                             The world's most advanced spatial analytics engine for high-fidelity asset monitoring.
                         </p>
                     </motion.div>
@@ -135,10 +135,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     {/* Globe Container - Zero-Clipping Framing */}
                     <motion.div
                         style={{ scale: globeScale, opacity: globeOpacity, y: globeY }}
-                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pt-20 will-change-transform"
+                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pt-10 md:pt-20 will-change-transform"
                     >
-                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[200px] rounded-full scale-75"></div>
-                        <RotatingEarth width={1000} height={1000} className="max-w-[100vw] max-h-screen" />
+                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[100px] md:blur-[200px] rounded-full scale-100 md:scale-75"></div>
+                        <RotatingEarth width={window.innerWidth < 768 ? 600 : 1000} height={window.innerWidth < 768 ? 600 : 1000} className="max-w-[100vw] max-h-screen" />
                     </motion.div>
 
                     {/* Scroll Indicator / Minimalist 'Skip' Cue */}
@@ -208,7 +208,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full">
                         {dashboards.map((db) => (
                             <FeatureCard
                                 key={db.id}
@@ -233,42 +233,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 className="relative z-30 min-h-screen flex flex-col items-center justify-center text-center border-t border-white/5 bg-gradient-to-b from-transparent to-neutral-950 px-6"
             >
                 <div className="flex flex-col items-center justify-center flex-grow">
-                    <div className="inline-block px-4 py-1.5 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[10px] font-black uppercase tracking-[0.4em] mb-12 text-[#00cfbf] animate-pulse">
-                        Dynamic Geospatial Engine v2.0
+                    <div className="inline-block px-3 py-1 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-8 md:mb-12 text-[#00cfbf] animate-pulse">
+                        Geospatial Engine v2.0
                     </div>
                     <h2 className="text-6xl md:text-[10rem] font-outfit font-black mb-16 tracking-tighter leading-[0.8] uppercase text-gradient-premium">
                         MAP THE <br /> <span className="text-[#00cfbf]">UNSEEN DATA.</span>
                     </h2>
                     <button
                         onClick={onStart}
-                        className="px-16 py-8 md:px-32 md:py-10 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-black text-2xl md:text-3xl transition-all duration-500 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_80px_rgba(0,207,191,0.6)] active:scale-95 group flex items-center gap-4 mb-24"
+                        className="px-10 py-5 md:px-32 md:py-10 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-black text-lg md:text-3xl transition-all duration-500 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_80px_rgba(0,207,191,0.6)] active:scale-95 group flex items-center gap-4 mb-16 md:mb-24"
                     >
-                        <span className="relative z-10">LAUNCH PLATFORM</span>
-                        <ArrowRight className="w-10 h-10 relative z-10 group-hover:translate-x-2 transition-transform" />
+                        <span className="relative z-10 tracking-widest uppercase">LAUNCH PLATFORM</span>
+                        <ArrowRight className="w-6 h-6 md:w-10 md:h-10 relative z-10 group-hover:translate-x-2 transition-transform" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     </button>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-24 text-center opacity-40 hover:opacity-100 transition-opacity duration-1000">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-24 text-center opacity-40 hover:opacity-100 transition-opacity duration-1000 px-4">
                         <div className="flex flex-col items-center">
                             <span className="text-2xl md:text-5xl font-outfit font-bold">1.2s</span>
-                            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-2">Live Stream Sync</span>
+                            <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Live Sync</span>
                         </div>
                         <div className="flex flex-col items-center">
                             <span className="text-2xl md:text-5xl font-outfit font-bold">32+</span>
-                            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-2">Active Layers</span>
+                            <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Active Layers</span>
                         </div>
                         <div className="flex flex-col items-center">
                             <span className="text-2xl md:text-5xl font-outfit font-bold">98%</span>
-                            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-2">Spatial Accuracy</span>
+                            <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Accuracy</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-2xl md:text-5xl font-outfit font-bold">Instant</span>
-                            <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-2">Risk Calculation</span>
+                            <span className="text-2xl md:text-5xl font-outfit font-bold">Inst.</span>
+                            <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Response</span>
                         </div>
                     </div>
                 </div>
-                <footer className="absolute bottom-12 left-0 right-0 text-center text-neutral-600 text-[10px] tracking-[0.6em] font-black uppercase font-inter">
-                    &copy; 2026 Nexira Spatial Engine &bull; All Systems <span className="text-[#00cfbf]">Active</span>
+                <footer className="absolute bottom-6 md:bottom-12 left-0 right-0 text-center text-neutral-700 text-[7px] md:text-[9px] tracking-[0.3em] md:tracking-[0.6em] font-black uppercase font-inter opacity-40">
+                    &copy; 2026 Nexira Spatial &bull; Systems <span className="text-[#00cfbf]">Active</span>
                 </footer>
             </motion.section>
         </div>
@@ -281,7 +281,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             whileHover={{ y: -8, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`p-10 md:p-12 min-h-[420px] rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
+            className={`p-4 md:p-12 min-h-[300px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
                 ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.25)]'
                 : 'border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-neutral-900/20'
                 }`}
@@ -309,35 +309,35 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                 initial={false}
                 animate={{ opacity: isSelected ? 1 : 0, scaleX: isSelected ? 1 : 0 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
-                className={`absolute bottom-0 left-12 right-12 h-[2px] z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-10px_20px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-10px_20px_rgba(0,207,191,0.8)]'}`}
+                className={`absolute bottom-0 left-6 md:left-12 right-6 md:right-12 h-[2px] z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-10px_20px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-10px_20px_rgba(0,207,191,0.8)]'}`}
             />
 
-            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
+            <div className={`w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-8 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
                 }`}>
-                {React.cloneElement(icon, { className: "w-10 h-10" } as any)}
+                {React.cloneElement(icon, { className: "w-8 h-8 md:w-10 md:h-10" } as any)}
             </div>
 
-            <h3 className={`text-3xl md:text-4xl font-outfit font-black tracking-tighter mb-6 uppercase transition-colors ${isSelected ? 'text-white' : 'text-neutral-700'
+            <h3 className={`text-xl md:text-4xl font-outfit font-black tracking-tighter mb-2 md:mb-6 uppercase transition-colors ${isSelected ? 'text-white' : 'text-neutral-700'
                 }`}>
                 {title}
             </h3>
-            <p className={`text-lg md:text-xl font-medium leading-relaxed transition-colors ${isSelected ? 'text-neutral-400' : 'text-neutral-800'
+            <p className={`text-[10px] md:text-xl font-medium leading-relaxed transition-colors ${isSelected ? 'text-neutral-400' : 'text-neutral-800'
                 }`}>
                 {desc}
             </p>
 
             {/* Stable Footer - Always rendered to prevent height jumps */}
-            <div className="mt-auto w-full pt-10">
+            <div className="mt-auto w-full pt-6 md:pt-10">
                 <motion.div
                     initial={false}
                     animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 10 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-center justify-between"
                 >
-                    <span className={`text-[10px] font-black uppercase tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
-                        {isSoon ? 'Interface Coming Soon' : 'Interface Connected'}
+                    <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
+                        {isSoon ? 'Interface Soon' : 'Active'}
                     </span>
-                    <ArrowRight className={`w-6 h-6 ${isSoon ? 'text-amber-500 opacity-50' : 'text-[#00cfbf]'}`} />
+                    <ArrowRight className={`w-4 h-4 md:w-6 md:h-6 ${isSoon ? 'text-amber-500 opacity-50' : 'text-[#00cfbf]'}`} />
                 </motion.div>
             </div>
         </motion.div>
