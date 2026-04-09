@@ -169,3 +169,170 @@
 .will-change-all {
     will-change: transform, opacity, filter;
 }
+
+/* Fluid Layout Constraints */
+.landing-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem 2rem;
+}
+
+
+@media (max-width: 768px) {
+    .landing-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .section {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   FLUID HERO TYPOGRAPHY
+   clamp(min, preferred, max)
+   Scales smoothly from 320px viewport all the way to 1920px.
+   No breakpoint jumps — text is always proportional.
+────────────────────────────────────────────────────────────────── */
+.hero-heading {
+    /*
+       Uses BOTH vw and vh constraints to prevent overflowing the globe.
+       The globe bounds its size with min(80vw, 85vh).
+       By clamping the font against min(8.5vw, 12vh), the text shrinks 
+       not just when the screen is narrow (mobile), but also when it is 
+       WIDE but SHORT (desktop ultra-wide aspect ratios).
+    */
+    font-size: clamp(2.25rem, min(8.5vw, 12vh), 8.5rem);
+    margin-bottom: clamp(1rem, min(3vw, 5vh), 2.5rem);
+}
+
+.hero-subtitle {
+    font-size: clamp(0.7rem, min(0.4rem + 1.2vw, 2.5vh), 1.5rem);
+    /* Subtitle width must also respect vh to stay inside the globe on short screens
+       (e.g., 65vh ensures it's always narrower than the 85vh globe diameter). */
+    max-width: clamp(260px, min(60vw, 65vh), 42rem);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   GLOBE CANVAS BOX
+   The globe always fills this box. ResizeObserver inside the component
+   redraws the canvas whenever these dimensions change.
+
+   Strategy:
+   - Width  = min(80vw, 80vh) — square, viewport-proportional
+   - On small screens: full width minus gutters
+   - The aspect-ratio: 1/1 keeps it square at all sizes
+────────────────────────────────────────────────────────────────── */
+.globe-canvas-box {
+    /* Square box, scales with viewport */
+    width: clamp(320px, min(80vw, 85vh), 920px);
+    aspect-ratio: 1 / 1;
+    position: relative;
+    /* Override any absolute positioning on the parent's backdrop */
+    flex-shrink: 0;
+}
+
+/* The backdrop wrapper is absolutely inset — just centers the box */
+.globe-backdrop {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   CTA SECTION — FLUID HEADING
+   Uses BOTH vw (horizontal scale) and vh (vertical scale).
+   At short viewports this stops the heading consuming too much height.
+
+   Formula: clamp(2.5rem, min(8vw, 12vh), 10rem)
+   ─────────────────────────────────────────────
+   At 1164 × 747:  min(8×11.64, 12×7.47) = min(93px, 89.6px) → ~5.6rem ✓
+   At 1440 × 900:  min(8×14.4, 12×9)     = min(115px, 108px)  → ~6.75rem ✓
+   At 1920 × 1080: min(8×19.2, 12×10.8)  = min(153px, 129px)  → capped at min = 8rem ✓
+   At mobile 390×844: min(8×3.9, 12×8.44) = min(31px, 101px)  → clamp min = 2.5rem ✓
+────────────────────────────────────────────────────────────────── */
+.cta-heading {
+    /* Mobile font is larger natively: 13vw slope ensures "UNSEEN DATA." fills out the width nicely */
+    font-size: clamp(3rem, min(13vw, 12vh), 10rem);
+    margin-bottom: clamp(1.5rem, min(4vw, 6vh), 4rem);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   CTA LAUNCH BUTTON — FLUID PADDING + FONT
+   Padding and font-size scale with viewport so the button doesn't
+   take over small screens or look tiny on large ones.
+────────────────────────────────────────────────────────────────── */
+.cta-launch-btn {
+    font-size: clamp(0.7rem, 1.5vw, 1.875rem);
+    padding: clamp(0.5rem, 1.5vh, 2.5rem) clamp(1.25rem, 4vw, 8rem);
+    margin-bottom: clamp(2rem, 6vh, 6rem);
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   FEATURE CARDS — FLUID HEIGHT
+   Cards scale between 160px (mobile) and 420px (large desktop),
+   driven by viewport HEIGHT so they never overflow the screen.
+
+   min-height: clamp(160px, 38vh, 420px)
+   ──────────────────────────────────────
+   At 747px tall:   38×7.47 = 283px ✓ (fits well within viewport)
+   At 900px tall:   38×9    = 342px ✓
+   At 1080px tall:  38×10.8 = 410px ✓ (near-max)
+   At mobile 667px: 38×6.67 = 253px > 160px min ✓
+   
+   Padding also scales via clamp so inner content doesn't cramp.
+────────────────────────────────────────────────────────────────── */
+.feature-card {
+    /* Mobile/Tablet: Cards stack in 2 rows, so they must be shorter to fit */
+    min-height: clamp(140px, 22vh, 240px);
+    padding: clamp(0.75rem, 3vw, 1.5rem);
+}
+
+@media (min-width: 1024px) {
+    .feature-card {
+        /* Desktop: 1 row, can afford to take more vertical space */
+        min-height: clamp(200px, 38vh, 420px);
+        padding: clamp(1.5rem, 2vw, 3rem);
+    }
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   FEATURE CARD INNER CONTENT
+   These elements scale proportionally to ensure they always fit 
+   within the bounded card min-height.
+────────────────────────────────────────────────────────────────── */
+.feature-card-icon-container {
+    width: clamp(2.5rem, 6vh, 5rem);
+    height: clamp(2.5rem, 6vh, 5rem);
+    border-radius: clamp(0.5rem, 2vh, 1rem);
+    margin-bottom: clamp(0.5rem, 4vh, 3rem);
+}
+
+.feature-card-icon {
+    width: clamp(1.25rem, 3vh, 2.5rem);
+    height: clamp(1.25rem, 3vh, 2.5rem);
+}
+
+.feature-card-title {
+    font-size: clamp(1rem, min(3vw, 4vh), 2.25rem);
+    margin-bottom: clamp(0.25rem, 2vh, 1.5rem);
+}
+
+.feature-card-desc {
+    font-size: clamp(0.55rem, min(1.5vw, 2.5vh), 1.25rem);
+}
+
+.feature-card-footer {
+    padding-top: clamp(0.75rem, 3vh, 2.5rem);
+}

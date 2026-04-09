@@ -102,7 +102,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 </div>
 
                 <div className="flex items-center gap-4 md:gap-6">
-                    <span className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-[#00cfbf]">Ready for {selectedId.replace('-', ' ')}</span>
+
                     <button
                         onClick={onStart}
                         className="px-4 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold text-sm md:text-base transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
@@ -124,23 +124,26 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         className="z-20 text-center px-4 relative top-[-4vh] md:top-[-6vh]"
                     >
                         <div className="inline-block px-2 md:px-4 py-0.5 md:py-1 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-4 md:mb-8 text-[#00cfbf]">
-                            Global Infrastructure v2.0
+                            Multi-Hazard GIS Dashboard
                         </div>
-                        <h1 className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
-                            Intelligence, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
+                        <h1 className="hero-heading font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
+                            Resilience, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
                         </h1>
-                        <p className="text-xs md:text-2xl text-neutral-400 max-w-[280px] md:max-w-2xl mx-auto leading-relaxed font-medium text-balance opacity-60 mt-4 md:mt-0">
-                            The world's most advanced spatial analytics engine for high-fidelity asset monitoring.
+                        <p className="hero-subtitle text-neutral-400 leading-relaxed font-medium text-balance opacity-60">
+                            Geospatial intelligence platform for multi-hazard risk assessment monitoring, risk assessment, and decision support.
                         </p>
                     </motion.div>
 
-                    {/* Globe Container - Zero-Clipping Framing */}
+                    {/* Globe Container — fills the entire sticky viewport area, sits below text via z-index */}
                     <motion.div
                         style={{ scale: globeScale, opacity: globeOpacity, y: globeY }}
-                        className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none will-change-transform top-[-2vh] md:top-[-4vh]"
+                        className="globe-backdrop absolute inset-0 flex items-center justify-center z-10 pointer-events-none will-change-transform"
                     >
-                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[80px] md:blur-[200px] rounded-full scale-110 md:scale-75"></div>
-                        <RotatingEarth width={window.innerWidth < 768 ? 680 : 900} height={window.innerWidth < 768 ? 680 : 900} className="max-w-[100vw] max-h-screen" />
+                        <div className="absolute inset-0 bg-[#00cfbf]/5 blur-[80px] md:blur-[150px] rounded-full scale-75" />
+                        {/* The globe-canvas-box drives all sizing — ResizeObserver inside the component reacts */}
+                        <div className="globe-canvas-box">
+                            <RotatingEarth />
+                        </div>
                     </motion.div>
 
                     <motion.div
@@ -149,7 +152,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         transition={{ delay: 2 }}
                         className="absolute bottom-[18%] md:bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-neutral-500"
                     >
-                        <span className="text-[9px] font-black uppercase tracking-[0.4em]">Explore</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.4em]">Scroll to Explore</span>
                         <motion.div
                             animate={{ y: [0, 4, 0] }}
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -181,7 +184,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         }
                     }
                 }}
-                className="relative z-30 min-h-screen flex flex-col items-center justify-center py-32 px-6 max-w-7xl mx-auto perspective-2000"
+                className="relative z-30 min-h-screen flex flex-col items-center justify-center py-10 px-6 max-w-7xl mx-auto perspective-2000"
             >
                 {/* Decorative Background */}
                 <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -189,7 +192,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 </div>
 
                 <div className="flex flex-col items-center w-full relative z-10">
-                    <div className="text-center mb-12 md:mb-20">
+                    <div className="text-center mb-6 md:mb-10 mt-8 md:mt-0">
                         <motion.h2
                             variants={{
                                 hidden: { opacity: 0, y: 40, filter: "blur(10px)" },
@@ -209,7 +212,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 w-full">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 w-full">
                         {dashboards.map((db) => (
                             <FeatureCard
                                 key={db.id}
@@ -237,15 +240,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     <div className="inline-block px-3 py-1 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-6 md:mb-12 text-[#00cfbf] animate-pulse">
                         Engine v2.0
                     </div>
-                    <h2 className="text-4xl md:text-[10rem] font-outfit font-black mb-8 md:mb-16 tracking-tighter leading-[0.85] uppercase text-gradient-premium">
+                    <h2 className="cta-heading font-outfit font-black tracking-tighter leading-[0.85] uppercase text-gradient-premium">
                         MAP THE <br /> <span className="text-[#00cfbf]">UNSEEN DATA.</span>
                     </h2>
                     <button
                         onClick={onStart}
-                        className="px-10 py-5 md:px-32 md:py-10 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-black text-lg md:text-3xl transition-all duration-500 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_80px_rgba(0,207,191,0.6)] active:scale-95 group flex items-center gap-4 mb-16 md:mb-24"
+                        className="cta-launch-btn relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-black transition-all duration-500 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_80px_rgba(0,207,191,0.6)] active:scale-95 group flex items-center justify-center gap-2 md:gap-4 mx-auto"
                     >
                         <span className="relative z-10 tracking-widest uppercase">LAUNCH PLATFORM</span>
-                        <ArrowRight className="w-6 h-6 md:w-10 md:h-10 relative z-10 group-hover:translate-x-2 transition-transform" />
+                        <ArrowRight className="w-4 h-4 md:w-10 md:h-10 relative z-10 group-hover:translate-x-2 transition-transform" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     </button>
 
@@ -255,7 +258,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Live Sync</span>
                         </div>
                         <div className="flex flex-col items-center">
-                            <span className="text-2xl md:text-5xl font-outfit font-bold">32+</span>
+                            <span className="text-2xl md:text-5xl font-outfit font-bold">3+</span>
                             <span className="text-[8px] md:text-xs uppercase tracking-[0.3em] font-black text-[#00cfbf] mt-1 md:mt-2">Active Layers</span>
                         </div>
                         <div className="flex flex-col items-center">
@@ -282,8 +285,8 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
             whileHover={{ y: -8, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className={`p-3 md:p-12 min-h-[200px] md:min-h-[420px] rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
-                ? (isSoon ? 'border-amber-500 bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(245,158,11,0.2)]' : 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.2)]')
+            className={`feature-card rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-500 cursor-pointer flex flex-col items-start group relative overflow-hidden ${isSelected
+                ? 'border-[#00cfbf] bg-neutral-900/60 shadow-[0_40px_100px_-20px_rgba(0,207,191,0.2)]'
                 : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-neutral-900/40'
                 }`}
         >
@@ -294,7 +297,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                     initial={{ x: "-120%" }}
                     animate={{ x: "200%" }}
                     transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-                    className={`absolute inset-y-0 w-64 blur-[100px] opacity-20 z-30 pointer-events-none ${isSoon ? 'bg-amber-500' : 'bg-[#00cfbf]'}`}
+                    className="absolute inset-y-0 w-64 blur-[100px] opacity-20 z-30 pointer-events-none bg-[#00cfbf]"
                     style={{ mixBlendMode: 'screen', skewX: '-30deg' }}
                 />
             )}
@@ -304,35 +307,35 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                 initial={false}
                 animate={{ opacity: isSelected ? 1 : 0, scaleX: isSelected ? 1 : 0 }}
                 transition={{ duration: 1, ease: [0.13, 1, 0.32, 1] }}
-                className={`absolute bottom-0 left-6 md:left-12 right-6 md:right-12 h-[2px] rounded-full z-20 ${isSoon ? 'bg-amber-500 shadow-[0_-8px_15px_rgba(245,158,11,0.8)]' : 'bg-[#00cfbf] shadow-[0_-8px_15px_rgba(0,207,191,0.8)]'}`}
+                className="absolute bottom-0 left-6 md:left-12 right-6 md:right-12 h-[2px] rounded-full z-20 bg-[#00cfbf] shadow-[0_-8px_15px_rgba(0,207,191,0.8)]"
             />
 
-            <div className={`w-12 h-12 md:w-20 md:h-20 rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-12 transition-all duration-500 ${isSelected ? (isSoon ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30') : 'bg-neutral-800 text-white/30'
+            <div className={`feature-card-icon-container flex items-center justify-center transition-all duration-500 ${isSelected ? 'bg-[#00cfbf] text-black shadow-lg shadow-[#00cfbf]/30' : 'bg-neutral-800 text-white/30'
                 }`}>
-                {React.cloneElement(icon, { className: "w-6 h-6 md:w-10 md:h-10" } as any)}
+                {React.cloneElement(icon, { className: "feature-card-icon" } as any)}
             </div>
 
-            <h3 className={`text-xl md:text-4xl font-outfit font-black tracking-tighter mb-2 md:mb-6 uppercase transition-colors ${isSelected ? 'text-white' : 'text-neutral-700'
+            <h3 className={`feature-card-title font-outfit font-black tracking-tighter uppercase transition-colors ${isSelected ? 'text-white' : 'text-neutral-700'
                 }`}>
                 {title}
             </h3>
-            <p className={`text-[10px] md:text-xl font-medium leading-relaxed transition-colors ${isSelected ? 'text-neutral-400' : 'text-neutral-800'
+            <p className={`feature-card-desc font-medium leading-relaxed transition-colors ${isSelected ? 'text-neutral-400' : 'text-neutral-800'
                 }`}>
                 {desc}
             </p>
 
             {/* Stable Footer - Always rendered to prevent height jumps */}
-            <div className="mt-auto w-full pt-4 md:pt-10">
+            <div className="feature-card-footer mt-auto w-full">
                 <motion.div
                     initial={false}
                     animate={{ opacity: isSelected ? 1 : 0, y: isSelected ? 0 : 10 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-center justify-center md:justify-between gap-3 md:gap-0 w-full"
                 >
-                    <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse ${isSoon ? 'text-amber-500' : 'text-[#00cfbf]'}`}>
+                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse text-[#00cfbf]">
                         {isSoon ? 'Coming Soon' : 'Active'}
                     </span>
-                    <ArrowRight className={`w-3 h-3 md:w-6 md:h-6 ${isSoon ? 'text-amber-500 opacity-50' : 'text-[#00cfbf]'}`} />
+                    <ArrowRight className="w-3 h-3 md:w-6 md:h-6 text-[#00cfbf]" />
                 </motion.div>
             </div>
         </motion.div>

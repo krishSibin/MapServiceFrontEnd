@@ -1,328 +1,301 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import * as d3 from "d3"
 
 interface RotatingEarthProps {
-    width?: number
-    height?: number
     className?: string
 }
 
-export default function RotatingEarth({ width = 800, height = 600, className = "" }: RotatingEarthProps) {
+// The globe always fills 100% of its container's width & height.
+// The parent is responsible for sizing the container.
+export default function RotatingEarth({ className = "" }: RotatingEarthProps) {
+    const wrapperRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!canvasRef.current) return
+    // These refs keep canvas-related state alive across renders and ResizeObserver callbacks
+    const projectionRef = useRef<d3.GeoProjection | null>(null)
+    const rotationRef = useRef<[number, number]>([0, 0])
+    const timerRef = useRef<d3.Timer | null>(null)
+    const landFeaturesRef = useRef<any>(null)
+    const allDotsRef = useRef<{ lng: number; lat: number }[]>([])
+    const sizeRef = useRef({ w: 0, h: 0, radius: 0 })
+    const dataLoadedRef = useRef(false)
 
+    // ── Drawing ────────────────────────────────────────────────────────────────
+    const render = useCallback(() => {
         const canvas = canvasRef.current
-        const context = canvas.getContext("2d")
-        if (!context) return
+        const ctx = canvas?.getContext("2d")
+        const projection = projectionRef.current
+        if (!canvas || !ctx || !projection) return
 
-        // Set up responsive dimensions
-        const containerWidth = Math.min(width, window.innerWidth - 40)
-        const containerHeight = Math.min(height, window.innerHeight - 180)
-        const radius = Math.min(containerWidth, containerHeight) / 2.15
+        const { w, h, radius } = sizeRef.current
+        const currentScale = projection.scale()
+        const scaleFactor = currentScale / radius
 
+        ctx.clearRect(0, 0, w, h)
+
+        // Globe fill
+        ctx.beginPath()
+        ctx.arc(w / 2, h / 2, currentScale, 0, 2 * Math.PI)
+        ctx.fillStyle = "#000000"
+        ctx.fill()
+
+        // Globe edge
+        ctx.beginPath()
+        ctx.arc(w / 2, h / 2, currentScale, 0, 2 * Math.PI)
+        ctx.strokeStyle = "#00cfbf"
+        ctx.lineWidth = 1 * scaleFactor
+        ctx.globalAlpha = 0.4
+        ctx.stroke()
+        ctx.globalAlpha = 1
+
+        if (landFeaturesRef.current) {
+            const path = d3.geoPath().projection(projection).context(ctx)
+
+            // Graticule
+            const graticule = d3.geoGraticule()
+            ctx.beginPath()
+            path(graticule())
+            ctx.strokeStyle = "#ffffff"
+            ctx.lineWidth = 0.5 * scaleFactor
+            ctx.globalAlpha = 0.15
+            ctx.stroke()
+            ctx.globalAlpha = 1
+
+            // Land outlines
+            ctx.beginPath()
+            landFeaturesRef.current.features.forEach((feature: any) => path(feature))
+            ctx.strokeStyle = "#ffffff"
+            ctx.lineWidth = 0.8 * scaleFactor
+            ctx.globalAlpha = 0.3
+            ctx.stroke()
+            ctx.globalAlpha = 1
+
+            // Halftone dots
+            ctx.fillStyle = "#00cfbf"
+            allDotsRef.current.forEach((dot) => {
+                const projected = projection([dot.lng, dot.lat])
+                if (
+                    projected &&
+                    projected[0] >= 0 && projected[0] <= w &&
+                    projected[1] >= 0 && projected[1] <= h
+                ) {
+                    ctx.beginPath()
+                    ctx.arc(projected[0], projected[1], 1 * scaleFactor, 0, 2 * Math.PI)
+                    ctx.fill()
+                }
+            })
+        }
+    }, [])
+
+    // ── Resize: recalculate canvas size & projection center ──────────────────
+    const applySize = useCallback((w: number, h: number) => {
+        const canvas = canvasRef.current
+        const ctx = canvas?.getContext("2d")
+        if (!canvas || !ctx) return
+
+        // Use the smaller dimension so the globe never clips
+        const radius = Math.min(w, h) / 2.15
         const dpr = window.devicePixelRatio || 1
-        canvas.width = containerWidth * dpr
-        canvas.height = containerHeight * dpr
-        canvas.style.width = `${containerWidth}px`
-        canvas.style.height = `${containerHeight}px`
-        context.scale(dpr, dpr)
 
-        // Create projection and path generator for Canvas
-        const projection = d3
-            .geoOrthographic()
-            .scale(radius)
-            .translate([containerWidth / 2, containerHeight / 2])
-            .clipAngle(90)
+        canvas.width = w * dpr
+        canvas.height = h * dpr
+        canvas.style.width = `${w}px`
+        canvas.style.height = `${h}px`
+        ctx.scale(dpr, dpr)
 
-        const path = d3.geoPath().projection(projection).context(context)
+        sizeRef.current = { w, h, radius }
 
-        const pointInPolygon = (point: [number, number], polygon: number[][]): boolean => {
-            const [x, y] = point
-            let inside = false
-
-            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                const [xi, yi] = polygon[i]
-                const [xj, yj] = polygon[j]
-
-                if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
-                    inside = !inside
-                }
-            }
-
-            return inside
+        if (!projectionRef.current) {
+            projectionRef.current = d3
+                .geoOrthographic()
+                .scale(radius)
+                .translate([w / 2, h / 2])
+                .clipAngle(90)
+        } else {
+            projectionRef.current
+                .scale(radius)
+                .translate([w / 2, h / 2])
         }
 
-        const pointInFeature = (point: [number, number], feature: any): boolean => {
-            const geometry = feature.geometry
+        render()
+    }, [render])
 
-            if (geometry.type === "Polygon") {
-                const coordinates = geometry.coordinates
-                // Check if point is in outer ring
-                if (!pointInPolygon(point, coordinates[0])) {
-                    return false
-                }
-                // Check if point is in any hole (inner rings)
-                for (let i = 1; i < coordinates.length; i++) {
-                    if (pointInPolygon(point, coordinates[i])) {
-                        return false // Point is in a hole
-                    }
-                }
-                return true
-            } else if (geometry.type === "MultiPolygon") {
-                // Check each polygon in the MultiPolygon
-                for (const polygon of geometry.coordinates) {
-                    // Check if point is in outer ring
-                    if (pointInPolygon(point, polygon[0])) {
-                        // Check if point is in any hole
-                        let inHole = false
-                        for (let i = 1; i < polygon.length; i++) {
-                            if (pointInPolygon(point, polygon[i])) {
-                                inHole = true
-                                break
-                            }
-                        }
-                        if (!inHole) {
-                            return true
-                        }
-                    }
-                }
-                return false
-            }
-
-            return false
-        }
-
-        const generateDotsInPolygon = (feature: any, dotSpacing = 16) => {
-            const dots: [number, number][] = []
-            const bounds = d3.geoBounds(feature)
-            const [[minLng, minLat], [maxLng, maxLat]] = bounds
-
-            const stepSize = dotSpacing * 0.08
-            let pointsGenerated = 0
-
-            for (let lng = minLng; lng <= maxLng; lng += stepSize) {
-                for (let lat = minLat; lat <= maxLat; lat += stepSize) {
-                    const point: [number, number] = [lng, lat]
-                    if (pointInFeature(point, feature)) {
-                        dots.push(point)
-                        pointsGenerated++
-                    }
-                }
-            }
-
-            console.log(
-                `[v0] Generated ${pointsGenerated} points for land feature:`,
-                feature.properties?.featurecla || "Land",
-            )
-            return dots
-        }
-
-        interface DotData {
-            lng: number
-            lat: number
-            visible: boolean
-        }
-
-        const allDots: DotData[] = []
-        let landFeatures: any
-
-        const render = () => {
-            if (!context) return
-            // Clear canvas
-            context.clearRect(0, 0, containerWidth, containerHeight)
-
-            const currentScale = projection.scale()
-            const scaleFactor = currentScale / radius
-
-            // Draw ocean (globe background)
-            context.beginPath()
-            context.arc(containerWidth / 2, containerHeight / 2, currentScale, 0, 2 * Math.PI)
-            context.fillStyle = "#000000"
-            context.fill()
-
-            // Sphere Edge
-            context.beginPath()
-            context.arc(containerWidth / 2, containerHeight / 2, currentScale, 0, 2 * Math.PI)
-            context.strokeStyle = "#00cfbf"
-            context.lineWidth = 1 * scaleFactor
-            context.globalAlpha = 0.4
-            context.stroke()
-            context.globalAlpha = 1
-
-            if (landFeatures) {
-                // Draw graticule
-                const graticule = d3.geoGraticule()
-                context.beginPath()
-                path(graticule())
-                context.strokeStyle = "#ffffff"
-                context.lineWidth = 0.5 * scaleFactor
-                context.globalAlpha = 0.15
-                context.stroke()
-                context.globalAlpha = 1
-
-                // Draw land outlines
-                context.beginPath()
-                landFeatures.features.forEach((feature: any) => {
-                    path(feature)
-                })
-                context.strokeStyle = "#ffffff"
-                context.lineWidth = 0.8 * scaleFactor
-                context.globalAlpha = 0.3
-                context.stroke()
-                context.globalAlpha = 1
-
-                // Draw halftone dots
-                context.fillStyle = "#00cfbf"
-                allDots.forEach((dot) => {
-                    const projected = projection([dot.lng, dot.lat])
-                    if (
-                        projected &&
-                        projected[0] >= 0 &&
-                        projected[0] <= containerWidth &&
-                        projected[1] >= 0 &&
-                        projected[1] <= containerHeight
-                    ) {
-                        context.beginPath()
-                        context.arc(projected[0], projected[1], 1 * scaleFactor, 0, 2 * Math.PI)
-                        context.fill()
-                    }
-                })
+    // ── Dot generation helpers ─────────────────────────────────────────────────
+    const pointInPolygon = (point: [number, number], polygon: number[][]): boolean => {
+        const [x, y] = point
+        let inside = false
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            const [xi, yi] = polygon[i]
+            const [xj, yj] = polygon[j]
+            if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+                inside = !inside
             }
         }
+        return inside
+    }
 
-        const loadWorldData = async () => {
+    const pointInFeature = (point: [number, number], feature: any): boolean => {
+        const { type, coordinates } = feature.geometry
+        if (type === "Polygon") {
+            if (!pointInPolygon(point, coordinates[0])) return false
+            for (let i = 1; i < coordinates.length; i++) {
+                if (pointInPolygon(point, coordinates[i])) return false
+            }
+            return true
+        }
+        if (type === "MultiPolygon") {
+            for (const poly of coordinates) {
+                if (pointInPolygon(point, poly[0])) {
+                    const inHole = poly.slice(1).some((ring: number[][]) => pointInPolygon(point, ring))
+                    if (!inHole) return true
+                }
+            }
+        }
+        return false
+    }
+
+    const generateDots = (feature: any, dotSpacing = 24) => {
+        const dots: [number, number][] = []
+        const [[minLng, minLat], [maxLng, maxLat]] = d3.geoBounds(feature)
+        const step = dotSpacing * 0.08
+        for (let lng = minLng; lng <= maxLng; lng += step) {
+            for (let lat = minLat; lat <= maxLat; lat += step) {
+                const pt: [number, number] = [lng, lat]
+                if (pointInFeature(pt, feature)) dots.push(pt)
+            }
+        }
+        return dots
+    }
+
+    // ── Load GeoJSON once ─────────────────────────────────────────────────────
+    useEffect(() => {
+        if (dataLoadedRef.current) return
+        dataLoadedRef.current = true
+
+        const load = async () => {
             try {
-                setIsLoading(true)
-
-                const response = await fetch(
-                    "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/refs/heads/master/110m/physical/ne_110m_land.json",
+                const res = await fetch(
+                    "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/refs/heads/master/110m/physical/ne_110m_land.json"
                 )
-                if (!response.ok) throw new Error("Failed to load land data")
+                if (!res.ok) throw new Error("Failed to load land data")
+                const json = await res.json()
+                landFeaturesRef.current = json
 
-                landFeatures = await response.json()
-
-                // Generate dots for all land features
-                let totalDots = 0
-                landFeatures.features.forEach((feature: any) => {
-                    const dots = generateDotsInPolygon(feature, 24)
-                    dots.forEach(([lng, lat]) => {
-                        allDots.push({ lng, lat, visible: true })
-                        totalDots++
-                    })
+                const dots: { lng: number; lat: number }[] = []
+                json.features.forEach((feature: any) => {
+                    generateDots(feature).forEach(([lng, lat]) => dots.push({ lng, lat }))
                 })
+                allDotsRef.current = dots
 
-                console.log(`[v0] Total dots generated: ${totalDots} across ${landFeatures.features.length} land features`)
-
-                render()
                 setIsLoading(false)
-            } catch (err) {
+                render()
+            } catch {
                 setError("Failed to load land map data")
                 setIsLoading(false)
             }
         }
 
-        // Set up rotation and interaction
-        const rotation = [0, 0]
+        load()
+    }, [render])
+
+    // ── ResizeObserver: drives canvas re-sizing on every container resize ──────
+    useEffect(() => {
+        const wrapper = wrapperRef.current
+        if (!wrapper) return
+
+        const ro = new ResizeObserver((entries) => {
+            const entry = entries[0]
+            if (!entry) return
+            const { width, height } = entry.contentRect
+            if (width > 0 && height > 0) {
+                applySize(Math.floor(width), Math.floor(height))
+            }
+        })
+        ro.observe(wrapper)
+
+        // Run once immediately in case ResizeObserver fires late
+        const { width, height } = wrapper.getBoundingClientRect()
+        if (width > 0 && height > 0) applySize(Math.floor(width), Math.floor(height))
+
+        return () => ro.disconnect()
+    }, [applySize])
+
+    // ── Animation loop ─────────────────────────────────────────────────────────
+    useEffect(() => {
         let autoRotate = true
-        const rotationSpeed = 0.5
 
-        const rotate = () => {
-            if (autoRotate) {
-                rotation[0] += rotationSpeed
-                projection.rotate(rotation as [number, number])
+        const tick = () => {
+            if (autoRotate && projectionRef.current) {
+                rotationRef.current[0] += 0.5
+                projectionRef.current.rotate(rotationRef.current)
                 render()
             }
         }
 
-        // Auto-rotation timer
-        const rotationTimer = d3.timer(rotate)
+        timerRef.current = d3.timer(tick)
 
-        const handleMouseDown = (event: MouseEvent) => {
+        // Mouse drag to rotate
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const onMouseDown = (e: MouseEvent) => {
             autoRotate = false
-            const startX = event.clientX
-            const startY = event.clientY
-            const startRotation = [...rotation]
+            const startX = e.clientX
+            const startY = e.clientY
+            const startRot = [...rotationRef.current] as [number, number]
 
-            const handleMouseMove = (moveEvent: MouseEvent) => {
-                const sensitivity = 0.5
-                const dx = moveEvent.clientX - startX
-                const dy = moveEvent.clientY - startY
-
-                rotation[0] = startRotation[0] + dx * sensitivity
-                rotation[1] = startRotation[1] - dy * sensitivity
-                rotation[1] = Math.max(-90, Math.min(90, rotation[1]))
-
-                projection.rotate(rotation as [number, number])
+            const onMove = (me: MouseEvent) => {
+                const dx = me.clientX - startX
+                const dy = me.clientY - startY
+                rotationRef.current[0] = startRot[0] + dx * 0.5
+                rotationRef.current[1] = Math.max(-90, Math.min(90, startRot[1] - dy * 0.5))
+                projectionRef.current?.rotate(rotationRef.current)
                 render()
             }
 
-            const handleMouseUp = () => {
-                document.removeEventListener("mousemove", handleMouseMove)
-                document.removeEventListener("mouseup", handleMouseUp)
-
-                setTimeout(() => {
-                    autoRotate = true
-                }, 10)
+            const onUp = () => {
+                document.removeEventListener("mousemove", onMove)
+                document.removeEventListener("mouseup", onUp)
+                setTimeout(() => { autoRotate = true }, 10)
             }
 
-            document.addEventListener("mousemove", handleMouseMove)
-            document.addEventListener("mouseup", handleMouseUp)
+            document.addEventListener("mousemove", onMove)
+            document.addEventListener("mouseup", onUp)
         }
 
-        const handleWheel = (event: WheelEvent) => {
-            event.preventDefault()
-            const scaleFactor = event.deltaY > 0 ? 0.9 : 1.1
-            const newRadius = Math.max(radius * 0.5, Math.min(radius * 3, projection.scale() * scaleFactor))
-            projection.scale(newRadius)
-            render()
-        }
+        canvas.addEventListener("mousedown", onMouseDown)
 
-        canvas.addEventListener("mousedown", handleMouseDown)
-        canvas.addEventListener("wheel", handleWheel)
-
-        // Initial draw even without data
-        render()
-
-        // Load the world data
-        loadWorldData()
-
-        // Cleanup
         return () => {
-            rotationTimer.stop()
-            canvas.removeEventListener("mousedown", handleMouseDown)
-            canvas.removeEventListener("wheel", handleWheel)
+            timerRef.current?.stop()
+            canvas.removeEventListener("mousedown", onMouseDown)
         }
-    }, [width, height])
+    }, [render])
 
     if (error) {
         return (
-            <div className={`dark flex items-center justify-center bg-card rounded-2xl p-8 ${className}`}>
-                <div className="text-center">
-                    <p className="dark text-destructive font-semibold mb-2">Error loading Earth visualization</p>
-                    <p className="dark text-muted-foreground text-sm">{error}</p>
-                </div>
+            <div className={`flex items-center justify-center ${className}`}>
+                <p className="text-red-400 text-sm">Earth visualization unavailable</p>
             </div>
         )
     }
 
     return (
-        <div className={`relative flex items-center justify-center transition-opacity duration-1000 ${isLoading ? 'opacity-20 blur-sm' : 'opacity-100 blur-0'} ${className}`}>
+        // wrapperRef fills 100% — parent controls the size
+        <div
+            ref={wrapperRef}
+            className={`relative w-full h-full ${className}`}
+        >
             <canvas
                 ref={canvasRef}
-                className="w-full h-auto rounded-2xl bg-transparent scale-110 md:scale-100"
-                style={{ maxWidth: "100%", height: "auto" }}
+                className={`block transition-[opacity,filter] duration-1000 ${isLoading ? "opacity-20 blur-sm" : "opacity-100 blur-0"}`}
             />
-
-            {/* Subtle "Data Loading" Pulse instead of big spinner */}
             {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-1/2 h-1/2 bg-[#00cfbf]/10 blur-[100px] rounded-full animate-pulse capitalize text-[#00cfbf] text-[10px] flex items-center justify-center tracking-[0.5em] font-black">
+                    <div className="w-1/2 h-1/2 bg-[#00cfbf]/10 blur-[100px] rounded-full animate-pulse text-[#00cfbf] text-[10px] flex items-center justify-center tracking-[0.5em] font-black capitalize">
                         Initializing Spatial Mesh
                     </div>
                 </div>
