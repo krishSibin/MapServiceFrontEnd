@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Header from './components/Header';
 import SideDrawer from './components/SideDrawer';
+import AnalyticsOverlay from './components/AnalyticsOverlay';
 import LandingPage from './components/LandingPage';
 import { io } from "socket.io-client";
 import localforage from 'localforage';
@@ -35,6 +36,7 @@ function App() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [showLegend, setShowLegend] = useState(true);
   const [showBottomPanel, setShowBottomPanel] = useState(true);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   /* ---------------- DATA SYNC (Pre-loading) ---------------- */
   useEffect(() => {
@@ -124,7 +126,10 @@ function App() {
 
   return (
     <div className="app-container h-[100dvh] overflow-hidden flex flex-col bg-[#070c14]">
-      <Header onOpenMenu={() => setIsDrawerOpen(true)} />
+      <Header
+        onOpenMenu={() => setIsDrawerOpen(true)}
+        onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+      />
 
       <div className="main-content-wrapper flex-1 overflow-hidden relative">
         <div className="dashboard-container">
@@ -296,6 +301,12 @@ function App() {
             </section>
           )}
         </div>
+
+        <AnalyticsOverlay
+          isOpen={isAnalyticsOpen}
+          onClose={() => setIsAnalyticsOpen(false)}
+          stats={stats}
+        />
 
         <SideDrawer
           isOpen={isDrawerOpen}
