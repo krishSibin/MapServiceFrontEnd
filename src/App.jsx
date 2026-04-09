@@ -14,7 +14,10 @@ import {
   TrafficCone,
   TrendingUp,
   BarChart3,
-  Menu
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import './App.css';
 
@@ -30,6 +33,8 @@ function App() {
   const [searchTarget, setSearchTarget] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showLegend, setShowLegend] = useState(true);
+  const [showBottomPanel, setShowBottomPanel] = useState(true);
 
   /* ---------------- DATA SYNC (Pre-loading) ---------------- */
   useEffect(() => {
@@ -155,6 +160,22 @@ function App() {
                 >
                   White
                 </button>
+                <div className="w-px h-4 bg-white/10 mx-1 md:mx-2 my-auto" />
+                <button
+                  className={`p-1 md:p-1.5 rounded-md transition-all ${showLegend ? 'text-[#38bdf8] bg-[#38bdf8]/10' : 'text-neutral-500 hover:text-white'}`}
+                  onClick={() => setShowLegend(!showLegend)}
+                  title={showLegend ? "Hide Legend" : "Show Legend"}
+                >
+                  {showLegend ? <Eye size={14} className="md:w-5 md:h-5" /> : <EyeOff size={14} className="md:w-5 md:h-5" />}
+                </button>
+                <div className="w-px h-4 bg-white/10 mx-1 md:mx-1 my-auto" />
+                <button
+                  className={`p-1 md:p-1.5 rounded-md transition-all ${showBottomPanel ? 'text-[#38bdf8] bg-[#38bdf8]/10' : 'text-neutral-500 hover:text-white'}`}
+                  onClick={() => setShowBottomPanel(!showBottomPanel)}
+                  title={showBottomPanel ? "Minimize Dashboard" : "Maximize Map"}
+                >
+                  {showBottomPanel ? <ChevronDown size={14} className="md:w-5 md:h-5" /> : <ChevronUp size={14} className="md:w-5 md:h-5" />}
+                </button>
               </div>
 
               <MapView
@@ -168,34 +189,36 @@ function App() {
                 onSearchComplete={clearSearchTarget}
               />
 
-              <div className="map-legend absolute z-[1000] pointer-events-none">
-                <div className="flex flex-col">
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded border-2 border-[#38bdf8]"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Land Boundaries</span>
-                  </div>
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded border-2 border-[#a855f7]/50 bg-[#a855f7]/10"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Admin Boundaries</span>
-                  </div>
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.4)]"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Flood Inundation</span>
-                  </div>
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Agricultural Zones</span>
-                  </div>
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.4)]"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Road Infrastructure</span>
-                  </div>
-                  <div className="legend-item flex items-center">
-                    <div className="legend-color rounded bg-[#0ea5e9] shadow-[0_0_10px_rgba(14,165,233,0.4)]"></div>
-                    <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Settlement Areas</span>
+              {showLegend && (
+                <div className="map-legend absolute z-[1000] pointer-events-none">
+                  <div className="flex flex-col">
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded border-2 border-[#38bdf8]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Land Boundaries</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded border-2 border-[#a855f7]/50 bg-[#a855f7]/10"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Admin Boundaries</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.4)]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Flood Inundation</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.4)]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Agricultural Zones</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.4)]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Road Infrastructure</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded bg-[#0ea5e9] shadow-[0_0_10px_rgba(14,165,233,0.4)]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Settlement Areas</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {selectedFeature && (
                 <div className="map-info-overlay">
@@ -226,50 +249,52 @@ function App() {
             </div>
           </main>
 
-          <section className="grid grid-cols-3 gap-2 md:gap-4 flex-shrink-0">
-            <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-1.5 md:gap-3">
-                <BarChart3 size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
-                <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">AGRICULTURAL</span>
-              </div>
-              <div className="flex flex-col items-center justify-center flex-1 py-1 md:py-4">
-                <div className="flex items-end gap-1 md:gap-3 h-[40px] md:h-[80px]">
-                  {[40, 90, 60, 45, 75].map((h, i) => (
-                    <div key={i} className="w-2 md:w-5 rounded-t-sm md:rounded-t-lg transition-all duration-500" style={{ height: `${h}%`, background: i === 1 ? '#22c55e' : (i === 4 ? '#ef4444' : '#22c55e40') }}></div>
-                  ))}
+          {showBottomPanel && (
+            <section className="grid grid-cols-3 gap-2 md:gap-4 flex-shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-1.5 md:gap-3">
+                  <BarChart3 size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
+                  <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">AGRICULTURAL</span>
                 </div>
-                <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-2 md:mt-6 tracking-widest uppercase truncate w-full text-center">Loss: $1.5M</span>
+                <div className="flex flex-col items-center justify-center flex-1 py-1 md:py-4">
+                  <div className="flex items-end gap-1 md:gap-3 h-[40px] md:h-[80px]">
+                    {[40, 90, 60, 45, 75].map((h, i) => (
+                      <div key={i} className="w-2 md:w-5 rounded-t-sm md:rounded-t-lg transition-all duration-500" style={{ height: `${h}%`, background: i === 1 ? '#22c55e' : (i === 4 ? '#ef4444' : '#22c55e40') }}></div>
+                    ))}
+                  </div>
+                  <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-2 md:mt-6 tracking-widest uppercase truncate w-full text-center">Loss: $1.5M</span>
+                </div>
               </div>
-            </div>
 
-            <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-1.5 md:gap-3">
-                <TrafficCone size={12} className="text-orange-400 md:w-5 md:h-5" />
-                <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INFRASTRUCTURE</span>
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-1.5 md:gap-3">
+                  <TrafficCone size={12} className="text-orange-400 md:w-5 md:h-5" />
+                  <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INFRASTRUCTURE</span>
+                </div>
+                <ul className="flex flex-col gap-1 md:gap-4">
+                  <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
+                    <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">HW 24</span>
+                    <span className="px-1 py-0 shadow-sm rounded-sm bg-red-500/10 text-red-500 text-[5px] md:text-[8px] font-black uppercase">CLOSED</span>
+                  </li>
+                  <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
+                    <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">4 Roads</span>
+                    <span className="px-1 py-0 shadow-sm rounded-sm bg-orange-500/10 text-orange-500 text-[5px] md:text-[8px] font-black uppercase">BLOCKED</span>
+                  </li>
+                </ul>
               </div>
-              <ul className="flex flex-col gap-1 md:gap-4">
-                <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
-                  <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">HW 24</span>
-                  <span className="px-1 py-0 shadow-sm rounded-sm bg-red-500/10 text-red-500 text-[5px] md:text-[8px] font-black uppercase">CLOSED</span>
-                </li>
-                <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
-                  <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">4 Roads</span>
-                  <span className="px-1 py-0 shadow-sm rounded-sm bg-orange-500/10 text-orange-500 text-[5px] md:text-[8px] font-black uppercase">BLOCKED</span>
-                </li>
-              </ul>
-            </div>
 
-            <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
-              <div className="flex items-center gap-1.5 md:gap-3">
-                <TrendingUp size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
-                <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INTENSITY</span>
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-1.5 md:gap-3">
+                  <TrendingUp size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
+                  <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INTENSITY</span>
+                </div>
+                <div className="flex-1 flex items-center justify-center relative min-h-[40px] md:min-h-0">
+                  <Activity size={20} className="md:w-10 md:h-10 text-[#38bdf8]/20 animate-pulse" />
+                  <span className="absolute bottom-0 text-[5px] md:text-[8px] font-bold text-neutral-600 tracking-widest uppercase">Live</span>
+                </div>
               </div>
-              <div className="flex-1 flex items-center justify-center relative min-h-[40px] md:min-h-0">
-                <Activity size={20} className="md:w-10 md:h-10 text-[#38bdf8]/20 animate-pulse" />
-                <span className="absolute bottom-0 text-[5px] md:text-[8px] font-bold text-neutral-600 tracking-widest uppercase">Live</span>
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
         </div>
 
         <SideDrawer
