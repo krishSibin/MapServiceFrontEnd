@@ -261,6 +261,7 @@
   outline: none;
   will-change: transform;
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .timeline-slider::-webkit-slider-thumb {

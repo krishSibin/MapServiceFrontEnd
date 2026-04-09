@@ -43,7 +43,12 @@ function App() {
   const [showBottomPanel, setShowBottomPanel] = useState(true);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
+  const [sliderIndex, setSliderIndex] = useState(0);
   const [showSlider, setShowSlider] = useState(true);
+
+  useEffect(() => {
+    setSliderIndex(currentTimeIndex);
+  }, [currentTimeIndex]);
 
   // Dynamic date extraction from flood data
   const availableDates = React.useMemo(() => {
@@ -315,7 +320,7 @@ function App() {
                     >
                       <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0 border-r border-white/10 pr-2 md:pr-4 h-4 md:h-5">
                         <Calendar size={11} className="text-[#38bdf8] md:w-3.5 md:h-3.5" />
-                        <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[currentTimeIndex])}</span>
+                        <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[sliderIndex] || availableDates[0])}</span>
                       </div>
 
                       <div className="flex-1 relative h-6 md:h-8 flex items-center min-w-[120px] md:min-w-[180px]">
@@ -324,8 +329,8 @@ function App() {
                           {availableDates.map((_, i) => (
                             <div
                               key={i}
-                              className={`timeline-tick ${i <= currentTimeIndex ? 'active' : ''}`}
-                              style={{ left: `${(i / (availableDates.length - 1)) * 100}%` }}
+                              className={`timeline-tick ${i <= sliderIndex ? 'active' : ''}`}
+                              style={{ left: `${(i / Math.max(1, availableDates.length - 1)) * 100}%` }}
                             />
                           ))}
                         </div>
@@ -334,8 +339,14 @@ function App() {
                           type="range"
                           min="0"
                           max={availableDates.length - 1}
-                          value={currentTimeIndex}
-                          onChange={(e) => setCurrentTimeIndex(parseInt(e.target.value))}
+                          value={sliderIndex || 0}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            setSliderIndex(val);
+                            React.startTransition(() => {
+                              setCurrentTimeIndex(val);
+                            });
+                          }}
                           className="timeline-slider relative z-10"
                         />
 
@@ -343,7 +354,7 @@ function App() {
                         <div className="absolute left-0 right-0 h-[1px] bg-white/5 pointer-events-none">
                           <div
                             className="h-full bg-gradient-to-r from-transparent to-[#38bdf8] shadow-[0_0_10px_#38bdf8]"
-                            style={{ width: `${(currentTimeIndex / (availableDates.length - 1)) * 100}%` }}
+                            style={{ width: `${((sliderIndex || 0) / Math.max(1, availableDates.length - 1)) * 100}%` }}
                           ></div>
                         </div>
                       </div>
@@ -433,7 +444,7 @@ function App() {
                             className="w-full rounded-t-sm md:rounded-t-md transition-all duration-500"
                             style={{
                               height: `${point.heightPercent}%`,
-                              background: isActive ? '#ef4444' : '#ef444440',
+                              background: isActive ? '#ef4444' : '#38bdf8',
                               boxShadow: isActive ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none'
                             }}
                           ></div>
