@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import MapView from './components/MapView';
 import Header from './components/Header';
 import SideDrawer from './components/SideDrawer';
@@ -18,7 +19,11 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Calendar,
+  BarChart2,
+  Clock,
+  X
 } from 'lucide-react';
 import './App.css';
 
@@ -37,6 +42,49 @@ function App() {
   const [showLegend, setShowLegend] = useState(true);
   const [showBottomPanel, setShowBottomPanel] = useState(true);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [currentTimeIndex, setCurrentTimeIndex] = useState(0);
+  const [showSlider, setShowSlider] = useState(true);
+
+  // Dynamic date extraction from flood data
+  const availableDates = React.useMemo(() => {
+    if (!layers || !layers.flood || !layers.flood.features) return ["2018-09-01"]; // Fallback or loading state
+    const dateSet = new Set();
+    layers.flood.features.forEach(f => {
+      if (f.properties?.date) dateSet.add(f.properties.date);
+    });
+    if (dateSet.size === 0) return ["2018-09-01"];
+    return Array.from(dateSet).sort();
+  }, [layers]);
+
+  const activeDate = availableDates[currentTimeIndex] || availableDates[0];
+
+  // Formatting for display (e.g., 2018-09-01 -> 01 Sep)
+  const formatDateDisplay = (dateStr) => {
+    try {
+      const [y, m, d] = dateStr.split('-');
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${d} ${months[parseInt(m) - 1]}`;
+    } catch (e) { return dateStr; }
+  };
+
+  // Calculate flood area dynamic time series for the mini-chart
+  const floodTimeSeries = React.useMemo(() => {
+    if (!layers || !layers.flood || !layers.flood.features) return [];
+
+    const mapped = availableDates.map(date => {
+      const area = layers.flood.features
+        .filter(f => f.properties?.date === date)
+        .reduce((sum, f) => sum + (f.properties?.area_ha || 0), 0);
+      return { date, area };
+    });
+
+    const maxArea = Math.max(...mapped.map(m => m.area), 1);
+
+    return mapped.map(m => ({
+      ...m,
+      heightPercent: Math.max((m.area / maxArea) * 100, 2) // Minimum 2% height for visibility
+    }));
+  }, [layers, availableDates]);
 
   /* ---------------- DATA SYNC (Pre-loading) ---------------- */
   useEffect(() => {
@@ -81,18 +129,45 @@ function App() {
     };
   }, [hasStarted]);
 
-  const filteredLayers = React.useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(layers).filter(([name]) => visibleLayers.includes(name))
-    );
-  }, [layers, visibleLayers]);
+  // Final Filtered Layers for Map - Now includes temporal filtering
+  const finalLayersForMap = React.useMemo(() => {
+    const filteredByVisibility = Object.entries(layers).filter(([name]) => visibleLayers.includes(name));
 
-  const stats = React.useMemo(() => [
-    { label: "Flooded Area", value: "3250", unit: "ha", icon: Waves, color: "#38bdf8" },
-    { label: "Crops Affected", value: "1800", unit: "ha", icon: Sprout, color: "#22c55e" },
-    { label: "Roads Impacted", value: "12", unit: "", icon: MapPin, color: "#f59e0b" },
-    { label: "Villages Affected", value: "8", unit: "", icon: Home, color: "#ef4444" }
-  ], []);
+    return Object.fromEntries(
+      filteredByVisibility.map(([name, data]) => {
+        // Only apply date filtering to certain layers if they have dates
+        if (['flood', 'crop', 'roads', 'settlement'].includes(name)) {
+          return [name, {
+            ...data,
+            features: data.features.filter(f => f.properties?.date === activeDate)
+          }];
+        }
+        return [name, data];
+      })
+    );
+  }, [layers, visibleLayers, activeDate]);
+
+  const stats = React.useMemo(() => {
+    // Helper to sum properties for the active date
+    const sumField = (layerName, field) => {
+      if (!layers[layerName]) return 0;
+      return layers[layerName].features
+        .filter(f => f.properties?.date === activeDate)
+        .reduce((sum, f) => sum + (f.properties[field] || 0), 0);
+    };
+
+    const floodArea = sumField('flood', 'area_ha');
+    const cropArea = sumField('crop', 'area_ha');
+    const roadLength = sumField('roads', 'length_km');
+    const villageCount = layers.settlement ? layers.settlement.features.filter(f => f.properties?.date === activeDate).length : 0;
+
+    return [
+      { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#38bdf8" },
+      { label: "Crops Affected", value: Math.round(cropArea).toLocaleString(), unit: "ha", icon: Sprout, color: "#22c55e" },
+      { label: "Roads Impacted", value: Math.round(roadLength).toLocaleString(), unit: "km", icon: MapPin, color: "#f59e0b" },
+      { label: "Villages Affected", value: villageCount.toString(), unit: "", icon: Home, color: "#ef4444" }
+    ];
+  }, [layers, activeDate]);
 
   const getRiskColor = (dn) => {
     if (dn >= 4) return "#ef4444";
@@ -185,7 +260,7 @@ function App() {
 
               <MapView
                 theme={mapTheme}
-                layers={filteredLayers}
+                layers={finalLayersForMap}
                 isInitialLoad={isInitialLoad}
                 riskFilter={riskFilter}
                 searchTarget={searchTarget}
@@ -225,6 +300,85 @@ function App() {
                 </div>
               )}
 
+              {/* Premium Responsive Date Timeline Slider with Optimized Animation */}
+              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-full max-w-[92%] md:max-w-[32%]">
+                <AnimatePresence mode="wait">
+                  {showSlider ? (
+                    <motion.div
+                      key="slider"
+                      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 15, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: "circOut" }}
+                      style={{ willChange: "transform, opacity" }}
+                      className="bg-black/20 backdrop-blur-[14px] border border-white/10 p-1.5 md:p-2.5 px-3 md:px-5 rounded-[1rem] shadow-[0_15px_50px_rgba(0,0,0,0.7)] flex items-center gap-2 md:gap-4 w-full pointer-events-auto"
+                    >
+                      <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0 border-r border-white/10 pr-2 md:pr-4 h-4 md:h-5">
+                        <Calendar size={11} className="text-[#38bdf8] md:w-3.5 md:h-3.5" />
+                        <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[currentTimeIndex])}</span>
+                      </div>
+
+                      <div className="flex-1 relative h-4 md:h-6 flex items-center min-w-[120px] md:min-w-[180px]">
+                        {/* Background Ticks */}
+                        <div className="absolute inset-0 flex justify-between items-center px-[2px] pointer-events-none">
+                          {availableDates.map((_, i) => (
+                            <div
+                              key={i}
+                              className={`timeline-tick ${i <= currentTimeIndex ? 'active' : ''}`}
+                              style={{ left: `${(i / (availableDates.length - 1)) * 100}%` }}
+                            />
+                          ))}
+                        </div>
+
+                        <input
+                          type="range"
+                          min="0"
+                          max={availableDates.length - 1}
+                          value={currentTimeIndex}
+                          onChange={(e) => setCurrentTimeIndex(parseInt(e.target.value))}
+                          className="timeline-slider relative z-10"
+                        />
+
+                        {/* Active Track Highlight */}
+                        <div className="absolute left-0 right-0 h-[1px] bg-white/5 pointer-events-none">
+                          <div
+                            className="h-full bg-gradient-to-r from-transparent to-[#38bdf8] shadow-[0_0_10px_#38bdf8]"
+                            style={{ width: `${(currentTimeIndex / (availableDates.length - 1)) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setShowSlider(false)}
+                        className="ml-1 md:ml-2 p-1 text-neutral-500 hover:text-white transition-colors"
+                      >
+                        <X size={12} className="md:w-3.5 md:h-3.5" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.button
+                      key="toggle"
+                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                      transition={{ duration: 0.15, ease: "circOut" }}
+                      style={{ willChange: "transform, opacity" }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowSlider(true)}
+                      className="bg-black/20 backdrop-blur-[14px] border border-white/10 p-2 md:p-2.5 px-4 md:px-5 rounded-[1rem] shadow-2xl text-[#38bdf8] transition-all group pointer-events-auto flex items-center gap-2.5"
+                      title="Open Timeline"
+                    >
+                      <Clock size={14} className="md:w-3.5 md:h-3.5 text-[#38bdf8]" />
+                      <div className="flex flex-col items-start -space-y-1">
+                        <span className="text-[7px] font-black uppercase tracking-tighter text-[#38bdf8]">Active Date</span>
+                        <span className="text-[11px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{formatDateDisplay(availableDates[currentTimeIndex])}</span>
+                      </div>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {selectedFeature && (
                 <div className="map-info-overlay">
                   <div className="overlay-header">
@@ -258,16 +412,43 @@ function App() {
             <section className="grid grid-cols-3 gap-2 md:gap-4 flex-shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
-                  <BarChart3 size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
-                  <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">AGRICULTURAL</span>
+                  <Waves size={12} className="text-[#ef4444] md:w-5 md:h-5" />
+                  <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">FLOOD IMPACT</span>
                 </div>
-                <div className="flex flex-col items-center justify-center flex-1 py-1 md:py-4">
-                  <div className="flex items-end gap-1 md:gap-3 h-[40px] md:h-[80px]">
-                    {[40, 90, 60, 45, 75].map((h, i) => (
-                      <div key={i} className="w-2 md:w-5 rounded-t-sm md:rounded-t-lg transition-all duration-500" style={{ height: `${h}%`, background: i === 1 ? '#22c55e' : (i === 4 ? '#ef4444' : '#22c55e40') }}></div>
-                    ))}
+                <div className="flex flex-col items-center justify-center flex-1 py-3 md:py-6 w-full">
+                  <div className="flex items-end justify-between gap-1 md:gap-2 h-[45px] md:h-[80px] w-full px-2 relative mb-2 text-center">
+                    {floodTimeSeries.map((point, i) => {
+                      const isActive = point.date === activeDate;
+                      return (
+                        <div key={i} className="w-full h-full flex items-end justify-center relative group">
+                          {/* Value on Top */}
+                          <span
+                            className={`absolute text-[6px] md:text-[8px] font-black tracking-wider transition-all duration-300 w-[150%] text-center ${isActive ? 'text-white' : 'text-neutral-600 group-hover:text-neutral-400'}`}
+                            style={{ bottom: `calc(${point.heightPercent}% + 4px)` }}
+                          >
+                            {Math.round(point.area).toLocaleString()}
+                          </span>
+
+                          <div
+                            className="w-full rounded-t-sm md:rounded-t-md transition-all duration-500"
+                            style={{
+                              height: `${point.heightPercent}%`,
+                              background: isActive ? '#ef4444' : '#ef444440',
+                              boxShadow: isActive ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none'
+                            }}
+                          ></div>
+
+                          {/* Date on Bottom */}
+                          <span
+                            className={`absolute -bottom-4 md:-bottom-5 text-[5px] md:text-[7px] font-bold uppercase tracking-wider transition-all duration-300 w-[150%] text-center whitespace-nowrap ${isActive ? 'text-[#ef4444] drop-shadow-md' : 'text-neutral-600 group-hover:text-neutral-400'}`}
+                          >
+                            {formatDateDisplay(point.date)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-2 md:mt-6 tracking-widest uppercase truncate w-full text-center">Loss: $1.5M</span>
+                  <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-4 md:mt-6 tracking-widest uppercase truncate w-full text-center">Peak: {Math.round(Math.max(...floodTimeSeries.map(d => d.area), 0)).toLocaleString()} ha</span>
                 </div>
               </div>
 
@@ -282,7 +463,7 @@ function App() {
                     <span className="px-1 py-0 shadow-sm rounded-sm bg-red-500/10 text-red-500 text-[5px] md:text-[8px] font-black uppercase">CLOSED</span>
                   </li>
                   <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
-                    <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">4 Roads</span>
+                    <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">{stats[2].value || 0} km</span>
                     <span className="px-1 py-0 shadow-sm rounded-sm bg-orange-500/10 text-orange-500 text-[5px] md:text-[8px] font-black uppercase">BLOCKED</span>
                   </li>
                 </ul>

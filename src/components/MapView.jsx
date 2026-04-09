@@ -63,11 +63,23 @@ const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
         }
     }, [searchTarget, map, onSearchComplete]);
 
+    // Ensure Leaflet resizes properly if the dashboard flex layout changes
+    useEffect(() => {
+        if (!map) return;
+        const resizeObserver = new ResizeObserver(() => {
+            map.invalidateSize();
+        });
+        resizeObserver.observe(map.getContainer());
+        return () => resizeObserver.disconnect();
+    }, [map]);
+
     return null;
 };
 
 // Optimized individual GeoJSON layer component
 const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect }) => {
+    const geoJsonRef = useRef(null);
+
     const filteredFeatures = useMemo(() => {
         if (!data || !data.features) return [];
         if (riskFilter === "all") return data.features;
@@ -86,6 +98,16 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
         features: filteredFeatures
     }), [filteredFeatures]);
 
+    useEffect(() => {
+        if (geoJsonRef.current) {
+            geoJsonRef.current.clearLayers();
+            // Only add data if there are features
+            if (layerData.features && layerData.features.length > 0) {
+                geoJsonRef.current.addData(layerData);
+            }
+        }
+    }, [layerData]);
+
     const onEachFeature = useCallback((feature, layer) => {
         layer.on({
             click: (e) => {
@@ -103,10 +125,11 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
         });
     }, [onSelect, name, getStyle]);
 
-    if (filteredFeatures.length === 0) return null;
-
+    // Don't unmount the component when empty, just render an empty GeoJSON 
+    // container. This preserves the Leaflet wrapper for programmatic updates.
     return (
         <GeoJSON
+            ref={geoJsonRef}
             key={`${name}-${riskFilter}`}
             data={layerData}
             style={(f) => getStyle(name, f)}
