@@ -318,7 +318,7 @@ function App() {
                         <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[currentTimeIndex])}</span>
                       </div>
 
-                      <div className="flex-1 relative h-4 md:h-6 flex items-center min-w-[120px] md:min-w-[180px]">
+                      <div className="flex-1 relative h-6 md:h-8 flex items-center min-w-[120px] md:min-w-[180px]">
                         {/* Background Ticks */}
                         <div className="absolute inset-0 flex justify-between items-center px-[2px] pointer-events-none">
                           {availableDates.map((_, i) => (
