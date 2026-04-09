@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as d3 from 'd3-shape';
 import {
     X,
     Waves,
@@ -10,10 +11,91 @@ import {
     TrendingUp,
     Zap,
     Target,
-    AlertTriangle
+    AlertTriangle,
+    Clock,
+    MapPin,
+    Home
 } from 'lucide-react';
 
-const AnalyticsOverlay = ({ isOpen, onClose, stats }) => {
+const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, currentTimeIndex, setCurrentTimeIndex, setSliderIndex, floodTimeSeries }) => {
+    // Local index — fully decoupled from the map to prevent expensive re-renders on every date click
+    const [localIndex, setLocalIndex] = useState(currentTimeIndex || 0);
+
+    // Sync local index when overlay opens (pick up whatever date the map is on)
+    useEffect(() => {
+        if (isOpen) setLocalIndex(currentTimeIndex || 0);
+    }, [isOpen]);
+
+    // Apply to map only when the overlay closes
+    const handleClose = () => {
+        if (setCurrentTimeIndex) setCurrentTimeIndex(localIndex);
+        if (setSliderIndex) setSliderIndex(localIndex);
+        onClose();
+    };
+
+    // Compute stats locally based on localIndex so they update instantly on date change
+    const localStats = React.useMemo(() => {
+        const localDate = (availableDates || [])[localIndex];
+        if (!localDate || !layers) return stats; // fallback to props
+
+        const sumField = (layerName, field) => {
+            if (!layers[layerName]) return 0;
+            return layers[layerName].features
+                .filter(f => f.properties?.date === localDate)
+                .reduce((sum, f) => sum + (f.properties[field] || 0), 0);
+        };
+
+        const floodArea = sumField('flood', 'area_ha');
+        const cropArea = sumField('crop', 'area_ha');
+        const roadLength = sumField('roads', 'length_km');
+        const villageCount = layers.settlement
+            ? layers.settlement.features.filter(f => f.properties?.date === localDate).length
+            : 0;
+
+        return [
+            { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#38bdf8" },
+            { label: "Crops Affected", value: Math.round(cropArea).toLocaleString(), unit: "ha", icon: Sprout, color: "#22c55e" },
+            { label: "Roads Impacted", value: Math.round(roadLength).toLocaleString(), unit: "km", icon: MapPin, color: "#f59e0b" },
+            { label: "Villages Affected", value: villageCount.toString(), unit: "", icon: Home, color: "#ef4444" }
+        ];
+    }, [localIndex, availableDates, layers]);
+    // Chart generators
+    const chartData = floodTimeSeries || [];
+    let curveAreaPath = "";
+    let curveLinePath = "";
+    let dashedLinePath = "";
+
+    if (chartData.length > 0) {
+        const maxA = Math.max(...chartData.map(d => d.area), 1);
+        const areaGen = d3.area()
+            .x((d, i) => (i / Math.max(1, chartData.length - 1)) * 1000)
+            .y0(200)
+            .y1(d => 200 - (d.area / maxA) * 160)
+            .curve(d3.curveMonotoneX);
+
+        const lineGen = d3.line()
+            .x((d, i) => (i / Math.max(1, chartData.length - 1)) * 1000)
+            .y(d => 200 - (d.area / maxA) * 160)
+            .curve(d3.curveMonotoneX);
+
+        const dashedGen = d3.line()
+            .x((d, i) => (i / Math.max(1, chartData.length - 1)) * 1000)
+            .y(d => 200 - ((d.area * 0.6 + maxA * 0.2) / maxA) * 160)
+            .curve(d3.curveMonotoneX);
+
+        curveAreaPath = areaGen(chartData);
+        curveLinePath = lineGen(chartData);
+        dashedLinePath = dashedGen(chartData);
+    }
+
+    const formatDateDisplay = (dateStr) => {
+        try {
+            const [y, m, d] = dateStr.split('-');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${d} ${months[parseInt(m) - 1]}`;
+        } catch (e) { return dateStr; }
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -23,24 +105,148 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats }) => {
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-[2000] bg-[#0b1219]/95 backdrop-blur-2xl overflow-y-auto"
                 >
-                    {/* Header */}
-                    <div className="sticky top-0 z-10 px-6 py-8 flex items-center justify-between border-b border-white/5 bg-[#0b1219]/50 backdrop-blur-md">
-                        <div>
-                            <h2 className="text-2xl md:text-3xl font-outfit font-black text-white uppercase tracking-tight">Spatial Analytics</h2>
-                            <p className="text-neutral-500 text-xs md:text-sm font-medium tracking-widest uppercase mt-1">Real-time Environmental Insights</p>
+                    {/* Header with Sticky Global Date Picker */}
+                    <div className="sticky top-0 z-50 flex flex-col border-b border-white/5 bg-[#0b1219]/90 backdrop-blur-xl shadow-2xl">
+                        <div className="px-6 py-6 md:py-8 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl md:text-3xl font-outfit font-black text-white uppercase tracking-tight">Spatial Analytics</h2>
+                                <p className="text-neutral-500 text-xs md:text-sm font-medium tracking-widest uppercase mt-1">Real-time Environmental Insights</p>
+                            </div>
+                            <button
+                                onClick={handleClose}
+                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/5 text-white hover:bg-[#ef4444] transition-all group shrink-0 ml-4 border border-white/10 hover:border-[#ef4444]/50"
+                            >
+                                <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                            </button>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/5 text-white hover:bg-[#ef4444] transition-all group"
-                        >
-                            <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                        </button>
+
+                        {/* Global Date Picker — Local state only, syncs to map on close */}
+                        <div className="w-full bg-[#0b1219]/90 border-t border-white/5 py-3 backdrop-blur-xl relative z-50 shadow-md shrink-0">
+                            <style>{`
+                                .no-scrollbar::-webkit-scrollbar { display: none; }
+                                .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                            `}</style>
+                            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-[#38bdf8] text-[10px] md:text-xs font-black tracking-widest uppercase shrink-0 w-full md:w-auto justify-center md:justify-start">
+                                    <Clock size={14} />
+                                    <span>Observation</span>
+                                </div>
+
+                                <div className="w-full md:max-w-[500px] lg:max-w-[700px] bg-black/50 border border-white/10 rounded-full p-1 flex">
+                                    <div className="flex w-full overflow-x-auto snap-x no-scrollbar items-center gap-1 scroll-smooth">
+                                        {(availableDates || []).map((date, i) => {
+                                            const isSelected = i === localIndex;
+                                            const dateObj = new Date(date);
+                                            const formatted = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
+                                            return (
+                                                <button
+                                                    key={date}
+                                                    onClick={() => setLocalIndex(i)}
+                                                    className={`snap-center shrink-0 min-w-[70px] md:min-w-[80px] py-1.5 px-3 rounded-full text-[9px] md:text-xs font-black transition-all duration-150 ${isSelected
+                                                        ? 'bg-[#38bdf8] text-[#0b1219] shadow-[0_2px_12px_rgba(56,189,248,0.4)]'
+                                                        : 'text-neutral-500 hover:text-white hover:bg-white/5'
+                                                        }`}
+                                                >
+                                                    {formatted}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
                     </div>
 
                     <div className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+                        {/* Enhanced Detailed Bar Graph Section */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white/5 border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-2xl group"
+                        >
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#38bdf8]/10 blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-[#38bdf8]/20 transition-all duration-700" />
+
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4 relative z-10">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-[#38bdf8]/10 flex items-center justify-center text-[#38bdf8]">
+                                        <BarChart3 size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-black text-2xl uppercase tracking-wider">Flood Impact History</h3>
+                                        <p className="text-neutral-500 text-[10px] uppercase font-bold tracking-widest">Detailed Daily Inundation Area</p>
+                                    </div>
+                                </div>
+                                <div className="bg-[#0b1219] border border-white/10 px-4 py-2 rounded-lg flex gap-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#38bdf8]"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Recorded Area</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#ef4444] animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Active Date</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Detailed Bar Chart */}
+                            <div className="w-full h-[250px] md:h-[300px] relative z-10 flex items-end justify-between gap-2 md:gap-4 px-2 mt-8 pb-8 border-b border-white/10">
+                                {chartData.map((d, i) => {
+                                    const isSelected = i === localIndex;
+                                    const maxA = Math.max(...chartData.map(c => c.area), 1);
+                                    const heightPercent = Math.max((d.area / maxA) * 100, 2);
+                                    const formattedDate = formatDateDisplay(d.date).split(' ')[0] + ' ' + formatDateDisplay(d.date).split(' ')[1];
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            className="flex-1 w-full h-full flex flex-col justify-end items-center group relative cursor-pointer"
+                                            onClick={() => setLocalIndex(i)}
+                                        >
+                                            {/* Bar Container - Ensures correct bottom alignment */}
+                                            <div className="w-full h-[80%] flex flex-col justify-end relative">
+                                                {/* Tooltip locked exactly above the bar */}
+                                                <div
+                                                    className={`absolute w-full flex justify-center -translate-y-full pb-2 transition-all duration-300 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 -translate-y-[120%]'} z-20 pointer-events-none`}
+                                                    style={{ bottom: `${heightPercent}%` }}
+                                                >
+                                                    <div className={`px-2 py-1 rounded bg-[#0b1219] border ${isSelected ? 'border-[#ef4444]' : 'border-[#38bdf8]/50'} shadow-xl flex flex-col items-center whitespace-nowrap`}>
+                                                        <span className={`font-black tracking-widest text-[10px] md:text-xs ${isSelected ? 'text-[#ef4444]' : 'text-white'}`}>
+                                                            {Math.round(d.area).toLocaleString()}
+                                                        </span>
+                                                        <span className="text-[7px] text-neutral-500 uppercase tracking-widest">Hectares</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* The Bar Itself - using App.jsx w-full styling */}
+                                                <div
+                                                    className={`w-full max-w-[30px] mx-auto rounded-t-md md:rounded-t-lg transition-all duration-500 relative overflow-hidden group-hover:opacity-100 ${isSelected ? 'bg-[#ef4444] opacity-100' : 'bg-[#38bdf8] opacity-70 group-hover:bg-[#38bdf8]'
+                                                        }`}
+                                                    style={{
+                                                        height: `${heightPercent}%`,
+                                                        boxShadow: isSelected ? '0 0 15px rgba(239, 68, 68, 0.6)' : 'none'
+                                                    }}
+                                                >
+                                                    {/* Gloss overlay */}
+                                                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Bottom Date Label */}
+                                            <span className={`absolute -bottom-8 text-[8px] md:text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-colors ${isSelected ? 'text-[#ef4444]' : 'text-neutral-500 group-hover:text-white'
+                                                }`}>
+                                                {formattedDate}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+
                         {/* Top Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                            {stats.map((stat, i) => (
+                            {localStats.map((stat, i) => (
                                 <motion.div
                                     key={i}
                                     initial={{ opacity: 0, y: 20 }}

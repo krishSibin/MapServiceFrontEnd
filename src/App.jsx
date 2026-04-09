@@ -209,6 +209,7 @@ function App() {
       <Header
         onOpenMenu={() => setIsDrawerOpen(true)}
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
+        onGoHome={() => setHasStarted(false)}
       />
 
       <div className="main-content-wrapper flex-1 overflow-hidden relative">
@@ -295,7 +296,7 @@ function App() {
                     </div>
                     <div className="legend-item flex items-center">
                       <div className="legend-color rounded bg-[#f59e0b] shadow-[0_0_10px_rgba(245,158,11,0.4)]"></div>
-                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Road Infrastructure</span>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Inundated Roads</span>
                     </div>
                     <div className="legend-item flex items-center">
                       <div className="legend-color rounded bg-[#0ea5e9] shadow-[0_0_10px_rgba(14,165,233,0.4)]"></div>
@@ -498,6 +499,12 @@ function App() {
           isOpen={isAnalyticsOpen}
           onClose={() => setIsAnalyticsOpen(false)}
           stats={stats}
+          layers={layers}
+          availableDates={availableDates}
+          currentTimeIndex={currentTimeIndex}
+          setCurrentTimeIndex={setCurrentTimeIndex}
+          setSliderIndex={setSliderIndex}
+          floodTimeSeries={floodTimeSeries}
         />
 
         <SideDrawer
