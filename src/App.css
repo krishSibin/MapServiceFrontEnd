@@ -3,7 +3,10 @@
   --dash-bg-primary: #070c14;
   --dash-bg-card: #0f1822;
   --dash-bg-card-alt: #111d2b;
-  --dash-card-border: rgba(255, 255, 255, 0.07);
+  --dash-card-border: rgba(255, 255, 255, 0.3);
+  /* Light white/grey border */
+  --glass-border: var(--dash-card-border);
+  /* Mapping the missing class */
   --dash-text-primary: #f8fafc;
   --dash-text-secondary: #64748b;
   --dash-accent-teal: #00cfbf;
@@ -63,6 +66,7 @@
 .stat-card {
   background: var(--dash-bg-card);
   border: 1px solid var(--dash-card-border);
+  border-color: var(--dash-card-border) !important;
   padding: 1.25rem 1.5rem;
   border-radius: 1.25rem;
   display: flex;
@@ -124,6 +128,7 @@
   inset: 0;
   background: var(--dash-bg-card);
   border: 1px solid var(--dash-card-border);
+  border-color: var(--dash-card-border) !important;
   border-radius: 1.5rem;
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
@@ -140,6 +145,7 @@
 .widget-card {
   background: var(--dash-bg-card);
   border: 1px solid var(--dash-card-border);
+  border-color: var(--dash-card-border) !important;
   border-radius: 1.25rem;
   padding: 1.25rem 1.5rem;
   min-height: 170px;
@@ -359,6 +365,7 @@
 .widget-card {
   background: var(--bg-secondary);
   border: 1px solid var(--glass-border);
+  border-color: var(--glass-border) !important;
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
@@ -369,6 +376,7 @@
 .stat-card {
   background: var(--bg-secondary);
   border: 1px solid var(--glass-border);
+  border-color: var(--glass-border) !important;
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;

@@ -5,6 +5,8 @@ import Header from './components/Header';
 import SideDrawer from './components/SideDrawer';
 import AnalyticsOverlay from './components/AnalyticsOverlay';
 import LandingPage from './components/LandingPage';
+import AuthPage from './components/AuthPage';
+import AiAssistant from './components/AiAssistant';
 import { io } from "socket.io-client";
 import localforage from 'localforage';
 import {
@@ -30,6 +32,7 @@ import './App.css';
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [mapTheme, setMapTheme] = useState('dark');
   const [riskFilter, setRiskFilter] = useState('all');
@@ -200,8 +203,23 @@ function App() {
     setSearchTarget(null);
   }, []);
 
+  // Step 1: Show landing page first (publicly visible)
   if (!hasStarted) {
-    return <LandingPage onStart={() => setHasStarted(true)} />;
+    return (
+      <LandingPage
+        onStart={() => setHasStarted(true)}
+        onLogin={() => setHasStarted(true)}
+      />
+    );
+  }
+
+  // Step 2: Show login if not yet authenticated
+  if (!isAuthenticated) {
+    return (
+      <AuthPage
+        onAuth={() => setIsAuthenticated(true)}
+      />
+    );
   }
 
   return (
@@ -216,7 +234,7 @@ function App() {
         <div className="dashboard-container">
           <section className="grid grid-cols-4 gap-2 md:gap-3 flex-shrink-0">
             {stats.map((stat, i) => (
-              <div key={i} className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-4 rounded-lg md:rounded-xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 hover:border-[#38bdf8]/30 transition-all group">
+              <div key={i} className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-4 rounded-lg md:rounded-xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 hover:border-white/30 transition-all group">
                 <div className="w-6 h-6 md:w-12 md:h-12 rounded-md md:rounded-xl flex items-center justify-center transition-transform group-hover:scale-110" style={{ color: stat.color, background: `${stat.color}10` }}>
                   <stat.icon size={14} className="md:w-6 md:h-6" strokeWidth={2.5} />
                 </div>
@@ -232,7 +250,7 @@ function App() {
           </section>
 
           <main className="relative flex-1 min-h-[300px] md:min-h-[400px]">
-            <div className={`absolute inset-0 bg-[#0b1219] border border-white/5 rounded-2xl overflow-hidden shadow-2xl ${mapTheme}-theme`}>
+            <div className={`absolute inset-0 bg-[#0b1219] border border-white/10 rounded-2xl overflow-hidden shadow-2xl ${mapTheme}-theme`}>
               <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[1000] bg-[#0b1219]/80 backdrop-blur-md border border-white/10 p-1 rounded-lg md:rounded-xl flex gap-1 shadow-2xl">
                 <button
                   className={`px-2 py-1 md:px-4 md:py-1.5 rounded-md md:rounded-lg text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all ${mapTheme === 'dark' ? 'bg-[#38bdf8] text-white shadow-[0_0_15px_rgba(56,189,248,0.3)]' : 'text-neutral-500 hover:text-white'}`}
@@ -307,7 +325,7 @@ function App() {
               )}
 
               {/* Premium Responsive Date Timeline Slider with Optimized Animation */}
-              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-full max-w-[92%] md:max-w-[32%]">
+              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-max max-w-[calc(100%-116px)] md:max-w-[400px]">
                 <AnimatePresence mode="wait">
                   {showSlider ? (
                     <motion.div
@@ -417,22 +435,23 @@ function App() {
                   </div>
                 </div>
               )}
+              <AiAssistant />
             </div>
           </main>
 
           {showBottomPanel && (
             <section className="grid grid-cols-3 gap-2 md:gap-4 flex-shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <Waves size={12} className="text-[#ef4444] md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">FLOOD IMPACT</span>
                 </div>
                 <div className="flex flex-col items-center justify-center flex-1 py-3 md:py-6 w-full">
-                  <div className="flex items-end justify-between gap-1 md:gap-2 h-[45px] md:h-[80px] w-full px-2 relative mb-2 text-center">
+                  <div className="flex items-end justify-center gap-2 md:gap-8 lg:gap-12 h-[45px] md:h-[60px] xl:h-[80px] w-full px-1 lg:px-4 relative mb-2 text-center">
                     {floodTimeSeries.map((point, i) => {
                       const isActive = point.date === activeDate;
                       return (
-                        <div key={i} className="w-full h-full flex items-end justify-center relative group">
+                        <div key={i} className="h-full flex flex-shrink-0 items-end justify-center relative group w-[14px] md:w-[24px] lg:w-[36px] xl:w-[48px]">
                           {/* Value on Top */}
                           <span
                             className={`absolute text-[6px] md:text-[8px] font-black tracking-wider transition-all duration-300 w-[150%] text-center ${isActive ? 'text-white' : 'text-neutral-600 group-hover:text-neutral-400'}`}
@@ -464,7 +483,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <TrafficCone size={12} className="text-orange-400 md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INFRASTRUCTURE</span>
@@ -481,7 +500,7 @@ function App() {
                 </ul>
               </div>
 
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/5 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <TrendingUp size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INTENSITY</span>

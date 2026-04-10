@@ -8,9 +8,11 @@ import "./LandingPage.css"
 
 interface LandingPageProps {
     onStart: () => void
+    onLogin?: () => void
+    onSignup?: () => void
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup }) => {
     const containerRef = useRef<HTMLDivElement>(null)
     const heroRef = useRef<HTMLDivElement>(null)
     const [selectedId, setSelectedId] = React.useState("flood")
@@ -101,13 +103,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                     <span className="text-lg md:text-2xl font-outfit font-black uppercase tracking-tighter">Nexira <span className="text-[#00cfbf]">Spatial</span></span>
                 </div>
 
-                <div className="flex items-center gap-4 md:gap-6">
+                <div className="flex items-center gap-2 md:gap-4">
 
+                    {/* Single Login button */}
                     <button
-                        onClick={onStart}
+                        onClick={onLogin ?? onStart}
                         className="px-4 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold text-sm md:text-base transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
                     >
-                        <span className="relative z-10">Launch</span>
+                        <span className="relative z-10">Login</span>
                         <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     </button>
@@ -129,7 +132,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <h1 className="hero-heading font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
                             Resilience, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
                         </h1>
-                        <p className="hero-subtitle text-neutral-400 leading-relaxed font-medium text-balance opacity-60">
+                        <p className="hero-subtitle text-center text-neutral-400 leading-relaxed font-medium text-balance drop-shadow-md pb-4">
                             Geospatial intelligence platform for multi-hazard risk assessment monitoring, risk assessment, and decision support.
                         </p>
                     </motion.div>
@@ -205,7 +208,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             }}
                             className="text-3xl md:text-6xl font-outfit font-black tracking-tighter mb-3 md:mb-4"
                         >
-                            Select Your <span className="text-[#00cfbf]">Interface.</span>
+                            Select Your <span className="text-[#00cfbf]">Hazard Type.</span>
                         </motion.h2>
                         <p className="text-neutral-400 max-w-xl mx-auto text-sm md:text-xl font-medium tracking-tight opacity-60">
                             Deploy specialized mission-critical monitoring systems tailored to the objective.

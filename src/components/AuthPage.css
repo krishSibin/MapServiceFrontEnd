@@ -1,0 +1,404 @@
+/* ────────────────────────────────────────────────────────────────────
+   AuthPage.css — Nexira Spatial · "The Vibrant Glass Design"
+   Reference: Dribbble/21st.dev Premium Auth UI
+──────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+    --auth-bg-dark: #000000;
+    --auth-accent: #6d63ff;
+    --auth-card-bg: rgba(22, 22, 26, 0.7);
+    --auth-input-bg: rgba(255, 255, 255, 0.05);
+    --auth-input-border: rgba(255, 255, 255, 0.08);
+    --auth-text-dim: rgba(255, 255, 255, 0.4);
+}
+
+.auth-page-root {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--auth-bg-dark);
+    font-family: 'Inter', sans-serif;
+    color: #ffffff;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* ── Vibrant Background Mesh ────────────────────────────────────── */
+.auth-bg-vibrant {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        radial-gradient(circle at 50% 120%, #4c1d95 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, #1e1b4b 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, #312e81 0%, transparent 50%);
+    filter: blur(60px);
+}
+
+.auth-bg-vibrant::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Brand Header ────────────────────────────────────────────── */
+.auth-brand-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+}
+
+.auth-brand-main {
+    font-size: 2.25rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.auth-brand-sub {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.5em;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 0.5em;
+}
+
+/* ── Responsive Scaling ──────────────────────────────────────── */
+@media (max-width: 480px),
+(max-height: 850px) {
+    .auth-brand-main {
+        font-size: 1.3rem;
+    }
+
+    .auth-brand-sub {
+        font-size: 0.5rem;
+        letter-spacing: 0.3em;
+    }
+
+    .auth-brand-header {
+        margin-bottom: 8px;
+    }
+
+    .auth-page-root {
+        padding: 8px;
+    }
+
+    .auth-card {
+        padding: 12px;
+        border-radius: 16px;
+        max-width: 350px;
+        margin: 0 auto;
+    }
+
+    .auth-title {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .auth-tabs {
+        margin-bottom: 8px;
+        padding: 3px;
+    }
+
+    .auth-tab {
+        padding: 4px 10px;
+        font-size: 0.65rem;
+    }
+
+    .auth-form {
+        gap: 4px;
+    }
+
+    .auth-input {
+        height: 38px;
+        font-size: 0.75rem;
+        padding-left: 36px;
+    }
+
+    .auth-input-icon {
+        left: 12px;
+        width: 14px;
+        height: 14px;
+    }
+
+    .auth-submit-btn {
+        height: 40px;
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+
+    .auth-divider {
+        margin: 10px 0;
+    }
+
+    .auth-oauth-btn {
+        height: 38px;
+    }
+
+    .auth-oauth-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .auth-footer-text {
+        margin-top: 8px;
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-height: 650px) {
+    .auth-page-root {
+        padding: 4px;
+    }
+
+    .auth-card {
+        padding: 8px 12px;
+        border-radius: 12px;
+        margin: 0 auto;
+    }
+
+    .auth-title {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .auth-tabs {
+        margin-bottom: 4px;
+        padding: 2px;
+    }
+
+    .auth-tab {
+        padding: 2px 8px;
+        font-size: 0.6rem;
+    }
+
+    .auth-form {
+        gap: 2px;
+    }
+
+    .auth-input {
+        height: 32px;
+        font-size: 0.7rem;
+    }
+
+    .auth-submit-btn {
+        height: 34px;
+        margin-top: 2px;
+    }
+
+    .auth-divider {
+        margin: 4px 0;
+    }
+
+    .auth-oauth-btn {
+        height: 32px;
+    }
+
+    .auth-oauth-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .auth-footer-text {
+        margin-top: 4px;
+        font-size: 0.55rem;
+    }
+
+    .auth-brand-main {
+        font-size: 1rem;
+    }
+
+    .auth-brand-header {
+        margin-bottom: 4px;
+    }
+}
+
+/* ── Login Card Components ───────────────────────────────────── */
+.auth-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 440px;
+    margin: auto;
+}
+
+.auth-card {
+    position: relative;
+    background: var(--auth-card-bg);
+    backdrop-filter: blur(32px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    padding: 32px;
+    box-shadow: 0 50px 100px rgba(0, 0, 0, 0.6);
+}
+
+.auth-close-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+}
+
+@media (max-width: 480px),
+(max-height: 850px) {
+    .auth-close-btn {
+        top: 14px;
+        right: 14px;
+        width: 28px;
+        height: 28px;
+    }
+}
+
+.auth-tabs {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px;
+    border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 20px;
+}
+
+.auth-tab {
+    padding: 8px 24px;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+}
+
+.auth-tab.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.auth-input {
+    width: 100%;
+    height: 52px;
+    background: var(--auth-input-bg);
+    border: 1px solid var(--auth-input-border);
+    border-radius: 14px;
+    padding: 0 16px 0 44px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.auth-input-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--auth-text-dim);
+}
+
+.auth-submit-btn {
+    height: 54px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.auth-divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-divider span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--auth-text-dim);
+}
+
+.auth-oauth-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.auth-oauth-btn {
+    height: 52px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.auth-oauth-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.auth-footer-text {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--auth-text-dim);
+}
+
+.auth-error-box {
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    color: #f87171;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+}
