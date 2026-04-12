@@ -110,7 +110,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
                         onClick={onLogin ?? onStart}
                         className="px-4 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold text-sm md:text-base transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
                     >
-                        <span className="relative z-10">Login</span>
+                        <span className="relative z-10">Launch</span>
                         <ArrowRight className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" />
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
                     </button>

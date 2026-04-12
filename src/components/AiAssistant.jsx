@@ -68,7 +68,7 @@ export default function AiAssistant() {
                             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent shadow-[0_0_10px_#38bdf8]"></div>
                             <div className="flex items-center gap-2">
                                 <Sparkles size={14} className="text-[#38bdf8]" />
-                                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white drop-shadow-md">Nexira AI Logic</span>
+                                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white drop-shadow-md">Nexira AI</span>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="text-neutral-500 hover:text-white transition-colors bg-white/5 rounded p-1">
                                 <X size={14} />

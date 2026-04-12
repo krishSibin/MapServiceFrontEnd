@@ -16,8 +16,9 @@ import {
 } from 'lucide-react';
 
 const layerItems = [
-    { id: 'panchayat', label: 'Land Boundaries', icon: MapPin, color: '#38bdf8' },
-    { id: 'admin', label: 'Admin Boundaries', icon: Layout, color: '#a855f7' },
+    { id: 'village', label: 'Village Layer', icon: MapPin, color: '#38bdf8' },
+    { id: 'panchayat', label: 'Panchayath Boundary', icon: MapPin, color: '#38bdf8' },
+    { id: 'taluk', label: 'Taluk Boundary', icon: Layout, color: '#a855f7' },
     { id: 'flood', label: 'Flood Inundation', icon: Waves, color: '#ef4444' },
     { id: 'crop', label: 'Agricultural Zones', icon: Sprout, color: '#22c55e' },
     { id: 'roads', label: 'Road Infrastructure', icon: MapPin, color: '#f59e0b' },
@@ -41,6 +42,18 @@ const SideDrawer = ({
             prev.includes(layerId) ? prev.filter(id => id !== layerId) : [...prev, layerId]
         );
     };
+
+    const villageNames = useMemo(() => (
+        layers?.village
+            ? [...new Set(layers.village.features.map(f => f.properties.VILLAGE || f.properties.NAME || f.properties.name))].filter(Boolean).sort()
+            : []
+    ), [layers?.village]);
+
+    const filteredVillages = useMemo(() => (
+        searchTerm
+            ? villageNames.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)
+            : []
+    ), [searchTerm, villageNames]);
 
     const panchayatNames = useMemo(() => (
         layers?.panchayat
@@ -111,6 +124,43 @@ const SideDrawer = ({
                             </div>
                         </div>
 
+                        {/* Village Search (Optional/Secondary) */}
+                        {villageNames.length > 0 && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
+                                    <Search size={12} /> Search Village
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Type village name..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-[#161f2c] border border-white/5 p-4 rounded-xl outline-none text-white text-xs placeholder:text-neutral-600"
+                                    />
+                                    {searchTerm && filteredVillages.length > 0 && (
+                                        <div className="absolute left-0 right-0 mt-2 bg-[#1a2433] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+                                            {filteredVillages.map((name, i) => (
+                                                <button
+                                                    key={i}
+                                                    className="w-full text-left p-3 hover:bg-[#38bdf8]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
+                                                    onClick={() => {
+                                                        // Note: We need a handleSearchVillage prop if we want to search villages specifically
+                                                        // But for now we just use onSearch which currently points to handleSearchPanchayat
+                                                        // In App.jsx, handleSearchPanchayat checks both layers anyway.
+                                                        onSearch(name);
+                                                        setSearchTerm('');
+                                                    }}
+                                                >
+                                                    {name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Layer Control Section */}
                         <div className="space-y-4">
                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
@@ -137,6 +187,31 @@ const SideDrawer = ({
                                         </div>
                                     </button>
                                 ))}
+
+                                {/* Dynamic Layers (Auto-discovered from DB) */}
+                                {Object.keys(layers || {})
+                                    .filter(key => key.toLowerCase() !== 'boundary') // Explicitly filter out the generic 'boundary' layer
+                                    .filter(key => !layerItems.some(item => item.id.toLowerCase() === key.toLowerCase()))
+                                    .map(key => (
+                                        <button
+                                            key={key}
+                                            className="w-full flex items-center justify-between p-4 rounded-xl bg-[#161f2c] border border-white/5 transition-all hover:bg-[#1c2636]"
+                                            onClick={() => toggleLayer(key)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 text-neutral-400">
+                                                    <Layers size={16} />
+                                                </div>
+                                                <span className="font-bold text-xs text-white/90 capitalize">{key.replace(/_/g, ' ')}</span>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${visibleLayers.includes(key)
+                                                ? 'bg-[#00cfbf] border-[#00cfbf]'
+                                                : 'border-white/10'
+                                                }`}>
+                                                {visibleLayers.includes(key) && <Check size={14} className="text-black font-black" />}
+                                            </div>
+                                        </button>
+                                    ))}
                             </div>
                         </div>
 

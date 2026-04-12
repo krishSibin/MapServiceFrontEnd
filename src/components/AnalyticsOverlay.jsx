@@ -40,6 +40,9 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
 
         const sumField = (layerName, field) => {
             if (!layers[layerName]) return 0;
+            // Note: We could technically pass visibleLayers here if we want the big modal 
+            // to also respond to the sidebar toggles. usually Analytics shows everything.
+            // but for consistency with the main dashboard, I'll pass visibleLayers to the component.
             return layers[layerName].features
                 .filter(f => f.properties?.date === localDate)
                 .reduce((sum, f) => sum + (f.properties[field] || 0), 0);
@@ -48,8 +51,8 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
         const floodArea = sumField('flood', 'area_ha');
         const cropArea = sumField('crop', 'area_ha');
         const roadLength = sumField('roads', 'length_km');
-        const villageCount = layers.settlement
-            ? layers.settlement.features.filter(f => f.properties?.date === localDate).length
+        const villageCount = layers.village
+            ? layers.village.features.filter(f => f.properties?.date === localDate).length
             : 0;
 
         return [

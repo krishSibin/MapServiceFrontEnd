@@ -1,38 +1,43 @@
 import React, { useEffect, useMemo, useCallback, useRef } from "react";
-import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMap, Pane } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader2, Activity, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Helper component to handle map movement
-const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
+const MapController = ({ searchTarget, selectedFeature, onSearchComplete, allLayers }) => {
     const map = useMap();
     const initialZoomRef = useRef(false);
+    const lastLayerKeys = useRef("");
 
-    // Initial Auto-Fit when data arrives
+    // Aggressive Auto-Fit when data arrives/changes
     useEffect(() => {
-        if (!allLayers || Object.keys(allLayers).length === 0 || initialZoomRef.current) return;
+        if (!allLayers || Object.keys(allLayers).length === 0) return;
 
-        const handleInitialFit = () => {
+        // USER FIX: Only auto-fit once during the initial startup.
+        // Once the map has focused on the data, ignore any further layer toggles.
+        if (initialZoomRef.current) {
+            return;
+        }
+
+        const handleFit = () => {
             try {
-                // Focus on panchayat layer or any valid layer
-                const targetLayer = allLayers.panchayat || Object.values(allLayers).find(l => l.features?.length > 0);
+                // Focus on panchayat or taluk as the main administrative unit
+                const targetLayer = allLayers.panchayat || allLayers.taluk || allLayers.village || Object.values(allLayers).find(l => l.features?.length > 0);
 
                 if (targetLayer && targetLayer.features?.length > 0) {
                     const layer = L.geoJSON(targetLayer);
                     const bounds = layer.getBounds();
 
                     if (bounds.isValid()) {
-                        setTimeout(() => {
-                            map.invalidateSize();
-                            map.flyToBounds(bounds, {
-                                padding: [50, 50],
-                                duration: 2.5,
-                                easeLinearity: 0.1
-                            });
-                            initialZoomRef.current = true;
-                        }, 800);
+                        map.invalidateSize();
+                        map.flyToBounds(bounds, {
+                            padding: [50, 50],
+                            duration: initialZoomRef.current ? 1.5 : 2.5,
+                            easeLinearity: 0.1
+                        });
+                        initialZoomRef.current = true;
                     }
                 }
             } catch (err) {
@@ -40,10 +45,10 @@ const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
             }
         };
 
-        handleInitialFit();
+        handleFit();
     }, [allLayers, map]);
 
-    // Search focus fit
+    // Focus on Search Target
     useEffect(() => {
         if (searchTarget && searchTarget.geometry) {
             try {
@@ -51,7 +56,7 @@ const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
                 const bounds = layer.getBounds();
                 if (bounds.isValid()) {
                     map.flyToBounds(bounds, {
-                        padding: [60, 60],
+                        padding: [80, 80],
                         duration: 1.5,
                         easeLinearity: 0.25
                     });
@@ -62,6 +67,36 @@ const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
             if (onSearchComplete) onSearchComplete();
         }
     }, [searchTarget, map, onSearchComplete]);
+
+    // Focus on selection (Manual Clicks)
+    const lastSelectedId = useRef(null);
+    useEffect(() => {
+        if (selectedFeature && selectedFeature.geometry) {
+            const currentId = selectedFeature.properties?._uid ||
+                selectedFeature.properties?.VILL_NAME ||
+                selectedFeature.properties?.VILLAGE ||
+                selectedFeature.properties?.NAME;
+
+            if (currentId === lastSelectedId.current) return;
+            lastSelectedId.current = currentId;
+
+            try {
+                const layer = L.geoJSON(selectedFeature);
+                const bounds = layer.getBounds();
+                if (bounds.isValid()) {
+                    map.flyToBounds(bounds, {
+                        padding: [100, 100],
+                        duration: 1.2,
+                        easeLinearity: 0.2
+                    });
+                }
+            } catch (err) {
+                console.warn("Selection bounds error:", err);
+            }
+        } else if (!selectedFeature) {
+            lastSelectedId.current = null;
+        }
+    }, [selectedFeature, map]);
 
     // Ensure Leaflet resizes properly if the dashboard flex layout changes
     useEffect(() => {
@@ -77,7 +112,7 @@ const MapController = ({ searchTarget, onSearchComplete, allLayers }) => {
 };
 
 // Optimized individual GeoJSON layer component
-const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect }) => {
+const OptimizedLayer = React.memo(({ name, data, riskFilter, selectedFeature, getStyle, onSelect, interactive = true }) => {
     const geoJsonRef = useRef(null);
 
     const filteredFeatures = useMemo(() => {
@@ -108,99 +143,127 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
         }
     }, [layerData]);
 
+    // Efficiency: Manually update styles when selection changes without re-creating the layer
+    useEffect(() => {
+        if (geoJsonRef.current) {
+            geoJsonRef.current.setStyle((f) => getStyle(name, f, selectedFeature));
+        }
+    }, [selectedFeature, getStyle, name]);
+
+    const selectedFeatureRef = useRef(selectedFeature);
+    useEffect(() => {
+        selectedFeatureRef.current = selectedFeature;
+    }, [selectedFeature]);
+
     const onEachFeature = useCallback((feature, layer) => {
+        if (!interactive) return;
+
         layer.on({
             click: (e) => {
-                L.DomEvent.stopPropagation(e);
                 onSelect && onSelect({ ...feature, _layerName: name });
             },
             mouseover: (e) => {
                 const l = e.target;
-                l.setStyle({ fillOpacity: 0.9, weight: 2 });
+                const getMatchId = (f) => f?.properties?._uid || f?.properties?.PANCHAYAT || f?.properties?.PANCHAYATH || f?.properties?.TALUK || f?.properties?.VILLAGE || f?.properties?.VILL_NAME || f?.properties?.NAME || f?.properties?.VILLAGE_NA;
+                const isSelected = selectedFeatureRef.current && (
+                    name === selectedFeatureRef.current._layerName &&
+                    getMatchId(feature) === getMatchId(selectedFeatureRef.current)
+                );
+
+                if (!isSelected) {
+                    l.setStyle({ weight: 2.5, color: "#facc15" });
+                }
             },
             mouseout: (e) => {
                 const l = e.target;
-                l.setStyle(getStyle(name, feature));
+                l.setStyle(getStyle(name, feature, selectedFeatureRef.current));
             }
         });
-    }, [onSelect, name, getStyle]);
+    }, [onSelect, name, getStyle, interactive]);
 
-    // Don't unmount the component when empty, just render an empty GeoJSON 
-    // container. This preserves the Leaflet wrapper for programmatic updates.
     return (
         <GeoJSON
             ref={geoJsonRef}
             key={`${name}-${riskFilter}`}
             data={layerData}
-            style={(f) => getStyle(name, f)}
-            onEachFeature={onEachFeature}
-            renderer={L.canvas()}
+            style={(f) => getStyle(name, f, selectedFeature)}
+            onEachFeature={interactive ? onEachFeature : undefined}
+            interactive={interactive}
         />
     );
 });
 
-const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, onSelect, onSearchComplete }) => {
+const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selectedFeature, onSelect, onSearchComplete }) => {
     const isDataLoading = isInitialLoad;
 
-    const getStyle = React.useCallback((layerName, feature) => {
-        if (layerName === "flood") {
-            return {
-                fillColor: "#ef4444",
-                fillOpacity: 0.7,
-                weight: 1,
-                color: "#991b1b"
+    const getStyle = React.useCallback((layerName, feature, selectedFeature) => {
+        // ROBUST MATCHING FOR ALL ADMINISTRATIVE LEVELS
+        const getId = (f) => f?.properties?._uid || f?.properties?.PANCHAYAT || f?.properties?.PANCHAYATH || f?.properties?.TALUK || f?.properties?.VILLAGE || f?.properties?.VILL_NAME || f?.properties?.NAME || f?.properties?.VILLAGE_NA;
+
+        const targetId = getId(selectedFeature);
+        const currentId = getId(feature);
+
+        const isSelected = selectedFeature && (
+            layerName === selectedFeature._layerName && (
+                (feature.properties?._uid && feature.properties?._uid === selectedFeature.properties?._uid) ||
+                (targetId && targetId === currentId)
+            )
+        );
+
+        if (isSelected) {
+            let shouldHighlight = true;
+            if (layerName === 'taluk' && layers) {
+                const activeLayers = Object.keys(layers).filter(k => layers[k]);
+                if (activeLayers.length > 1) {
+                    shouldHighlight = false;
+                }
+            }
+
+            if (shouldHighlight) {
+                return {
+                    fillColor: "transparent",
+                    color: layerName === 'panchayat' ? '#1e40af' : "#facc15",
+                    weight: layerName === 'panchayat' ? 4.5 : 5,
+                    opacity: 1,
+                    dashArray: null
+                };
             }
         }
 
+        // --- Standard Layer Styles ---
+        if (layerName === "flood") {
+            return { fillColor: "#ef4444", fillOpacity: 0.7, weight: 1, color: "#991b1b" };
+        }
         if (layerName === "crop") {
-            return {
-                fillColor: "#22c55e",
-                fillOpacity: 0.5,
-                color: "#166534",
-                weight: 1
-            };
+            return { fillColor: "#22c55e", fillOpacity: 0.5, color: "#166534", weight: 1 };
         }
-
-        if (layerName === "roads") {
-            return {
-                color: "#f59e0b",
-                weight: 3,
-                opacity: 0.8
-            };
+        if (layerName === "taluk") {
+            return { color: "#ffffff", weight: 4, fillColor: "transparent", fillOpacity: 0, opacity: 1 };
         }
-
-        if (layerName === "settlement") {
-            return {
-                fillColor: "#0ea5e9",
-                fillOpacity: 0.4,
-                color: "#0369a1",
-                weight: 1
-            };
-        }
-
         if (layerName === "panchayat") {
             return {
-                color: "#38bdf8",
-                weight: 2.5,
+                color: "#e11d48",
+                weight: 4.5,
                 fillColor: "transparent",
-                opacity: 0.9
-            }
-        }
-
-        if (layerName === "admin") {
-            return {
-                color: "#a855f7",
-                weight: 2,
-                fillColor: "transparent",
+                fillOpacity: 0,
                 opacity: 0.8,
-                dashArray: "4, 8"
-            }
+                dashArray: "5, 5"
+            };
+        }
+        if (layerName === "village") {
+            return { color: "#38bdf8", weight: 1.8, fillColor: "#38bdf8", fillOpacity: 0.01, opacity: 0.9 };
+        }
+        if (layerName === "roads") {
+            return { color: "#f59e0b", weight: 3, opacity: 0.8 };
+        }
+        if (layerName === "settlement") {
+            return { fillColor: "#0ea5e9", fillOpacity: 0.4, color: "#0369a1", weight: 1 };
         }
 
         return { color: "#94a3b8", weight: 1, fillOpacity: 0.1 };
     }, []);
 
-    const layerOrder = ['settlement', 'crop', 'roads', 'flood', 'admin', 'panchayat'];
+    const layerOrder = ['taluk', 'crop', 'settlement', 'roads', 'flood', 'village', 'panchayat'];
 
     const sortedLayers = useMemo(() => {
         if (!layers) return [];
@@ -254,18 +317,27 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, onSel
             >
                 <TileLayer url={tileUrl} />
 
-                <MapController searchTarget={searchTarget} onSearchComplete={onSearchComplete} allLayers={layers} />
+                <MapController searchTarget={searchTarget} selectedFeature={selectedFeature} onSearchComplete={onSearchComplete} allLayers={layers} />
 
                 {sortedLayers.map(([name, data]) => (
-                    <OptimizedLayer
-                        key={name}
-                        name={name}
-                        data={data}
-                        riskFilter={riskFilter}
-                        getStyle={getStyle}
-                        onSelect={onSelect}
-                    />
+                    <Pane
+                        name={`${name}-pane`}
+                        key={`${name}-pane`}
+                        style={{ zIndex: 200 + (layerOrder.indexOf(name) * 10) }}
+                    >
+                        <OptimizedLayer
+                            name={name}
+                            data={data}
+                            riskFilter={riskFilter}
+                            selectedFeature={selectedFeature}
+                            getStyle={getStyle}
+                            onSelect={onSelect}
+                            interactive={['village', 'panchayat'].includes(name)}
+                        />
+                    </Pane>
                 ))}
+
+
             </MapContainer>
         </div>
     );

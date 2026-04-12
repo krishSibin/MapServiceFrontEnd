@@ -38,7 +38,7 @@ function App() {
   const [riskFilter, setRiskFilter] = useState('all');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [layers, setLayers] = useState({});
-  const [visibleLayers, setVisibleLayers] = useState(['panchayat', 'admin', 'flood', 'crop', 'roads', 'settlement']);
+  const [visibleLayers, setVisibleLayers] = useState(['panchayat', 'taluk', 'flood', 'crop', 'roads', 'village', 'settlement']);
   const [searchTarget, setSearchTarget] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -96,55 +96,86 @@ function App() {
 
   /* ---------------- DATA SYNC (Pre-loading) ---------------- */
   useEffect(() => {
+    // START PRE-FETCHING: As soon as user is authenticated (while they are on the landing page)
+    if (!isAuthenticated) return;
+
+    let isLive = false;
+
+    const processIncomingData = (data) => {
+      if (!data || Object.keys(data).length === 0) return;
+
+      const freshData = {};
+      Object.entries(data).forEach(([layerName, layerData]) => {
+        freshData[layerName] = {
+          ...layerData,
+          features: (layerData.features || []).map((f, idx) => ({
+            ...f,
+            properties: {
+              ...f.properties,
+              _uid: `${layerName}-${idx}`
+            }
+          }))
+        };
+      });
+
+      setLayers(freshData);
+      localforage.setItem('map-layers-cache', freshData);
+      setIsInitialLoad(false);
+
+      // Auto-discover layers
+      const incomingLayerKeys = Object.keys(freshData);
+      setVisibleLayers(prev => {
+        const newKeys = incomingLayerKeys.filter(k => k.toLowerCase() !== 'boundary' && !prev.includes(k));
+        return newKeys.length > 0 ? [...prev, ...newKeys] : prev;
+      });
+    };
+
     // 1. Load from Persistent Cache First
     localforage.getItem('map-layers-cache').then((cachedData) => {
-      if (cachedData && Object.keys(cachedData).length > 0) {
-        setLayers(cachedData);
+      if (!isLive && cachedData && Object.keys(cachedData).length > 0) {
+        processIncomingData(cachedData);
       }
     });
 
-    // 2. Setup Socket
-    const socket = io(SOCKET_URL);
+    // 2. HTTP Fallback (More reliable for first big load)
+    fetch(`${SOCKET_URL}/api/geojson`)
+      .then(res => res.json())
+      .then(data => {
+        if (!isLive) {
+          console.log("🚀 HTTP: Initial sync complete (Pre-loaded)");
+          processIncomingData(data);
+        }
+      })
+      .catch(err => console.warn("HTTP: Pre-fetch failed, waiting for socket...", err));
+
+    // 3. Setup Socket
+    const socket = io(SOCKET_URL, {
+      reconnectionAttempts: 20,
+      reconnectionDelay: 3000
+    });
 
     socket.on("geojson-update", (data) => {
-      if (data && Object.keys(data).length > 0) {
-        setLayers(data);
-        localforage.setItem('map-layers-cache', data);
-        // Only mark as loaded if the user has actually entered the app
-        if (hasStarted) {
-          setIsInitialLoad(false);
-        }
-      }
+      console.log("📡 SOCKET: Update received");
+      isLive = true;
+      processIncomingData(data);
     });
-
-    // Handle initial state if pre-loaded data is already there when user clicks Start
-    if (hasStarted && Object.keys(layers).length > 0) {
-      // Small delay for smooth transition cinematic
-      const timer = setTimeout(() => setIsInitialLoad(false), 1000);
-      return () => clearTimeout(timer);
-    }
-
-    // Safety timeout: Always hide loader eventually after user starts
-    if (hasStarted) {
-      const timer = setTimeout(() => {
-        setIsInitialLoad(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
 
     return () => {
       socket.disconnect();
     };
-  }, [hasStarted]);
+  }, [isAuthenticated]);
 
   // Final Filtered Layers for Map - Now includes temporal filtering
   const finalLayersForMap = React.useMemo(() => {
-    const filteredByVisibility = Object.entries(layers).filter(([name]) => visibleLayers.includes(name));
+    const filteredByVisibility = Object.entries(layers).filter(([name]) =>
+      name.toLowerCase() !== 'boundary' &&
+      visibleLayers.includes(name)
+    );
 
     return Object.fromEntries(
       filteredByVisibility.map(([name, data]) => {
         // Only apply date filtering to certain layers if they have dates
-        if (['flood', 'crop', 'roads', 'settlement'].includes(name)) {
+        if (['flood', 'crop', 'roads', 'settlement', 'village'].includes(name)) {
           return [name, {
             ...data,
             features: data.features.filter(f => f.properties?.date === activeDate)
@@ -158,7 +189,7 @@ function App() {
   const stats = React.useMemo(() => {
     // Helper to sum properties for the active date
     const sumField = (layerName, field) => {
-      if (!layers[layerName]) return 0;
+      if (!layers[layerName] || !visibleLayers.includes(layerName)) return 0;
       return layers[layerName].features
         .filter(f => f.properties?.date === activeDate)
         .reduce((sum, f) => sum + (f.properties[field] || 0), 0);
@@ -167,7 +198,7 @@ function App() {
     const floodArea = sumField('flood', 'area_ha');
     const cropArea = sumField('crop', 'area_ha');
     const roadLength = sumField('roads', 'length_km');
-    const villageCount = layers.settlement ? layers.settlement.features.filter(f => f.properties?.date === activeDate).length : 0;
+    const villageCount = (layers.village && visibleLayers.includes('village')) ? layers.village.features.filter(f => f.properties?.date === activeDate).length : 0;
 
     return [
       { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#38bdf8" },
@@ -188,36 +219,53 @@ function App() {
     setSelectedFeature(feature);
   }, []);
 
-  const handleSearchPanchayat = React.useCallback((panchayatName) => {
-    if (!layers.panchayat) return;
-    const feature = layers.panchayat.features.find(
-      f => f.properties.PANCHAYAT?.toLowerCase() === panchayatName.toLowerCase()
-    );
-    if (feature) {
-      setSearchTarget({ ...feature, _searchId: Date.now() });
+
+
+  const handleSpatialSearch = React.useCallback((name) => {
+    // Search across all administrative/village layers
+    const targetLayers = [
+      { data: layers.village, field: 'VILLAGE' },
+      { data: layers.panchayat, field: 'PANCHAYAT' }
+    ].filter(l => l.data && l.data.features);
+
+    let foundFeature = null;
+    for (const layer of targetLayers) {
+      foundFeature = layer.data.features.find(
+        f => (
+          f.properties[layer.field] ||
+          f.properties.PANCHAYATH ||
+          f.properties.NAME ||
+          f.properties.name
+        )?.toLowerCase() === name.toLowerCase()
+      );
+      if (foundFeature) break;
+    }
+
+    if (foundFeature) {
+      setSearchTarget({ ...foundFeature, _searchId: Date.now() });
       setIsDrawerOpen(false);
     }
-  }, [layers.panchayat]);
+  }, [layers.panchayat, layers.taluk, layers.village]);
 
   const clearSearchTarget = React.useCallback(() => {
     setSearchTarget(null);
   }, []);
 
-  // Step 1: Show landing page first (publicly visible)
-  if (!hasStarted) {
-    return (
-      <LandingPage
-        onStart={() => setHasStarted(true)}
-        onLogin={() => setHasStarted(true)}
-      />
-    );
-  }
-
-  // Step 2: Show login if not yet authenticated
+  // Step 1: Show login first (Protected entry)
   if (!isAuthenticated) {
     return (
       <AuthPage
         onAuth={() => setIsAuthenticated(true)}
+      />
+    );
+  }
+
+  // Step 2: Show landing page after successful login
+  if (!hasStarted) {
+    return (
+      <LandingPage
+        onStart={() => setHasStarted(true)}
+        onLogin={() => setHasStarted(true)} // Can be reused for Launch
       />
     );
   }
@@ -280,6 +328,7 @@ function App() {
                 >
                   {showBottomPanel ? <ChevronDown size={14} className="md:w-5 md:h-5" /> : <ChevronUp size={14} className="md:w-5 md:h-5" />}
                 </button>
+
               </div>
 
               <MapView
@@ -297,12 +346,16 @@ function App() {
                 <div className="map-legend absolute z-[1000] pointer-events-none">
                   <div className="flex flex-col">
                     <div className="legend-item flex items-center">
-                      <div className="legend-color rounded border-2 border-[#38bdf8]"></div>
-                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Land Boundaries</span>
+                      <div className="legend-color rounded border-2 border-[#38bdf8] bg-[#38bdf8]/10"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Village Layer</span>
                     </div>
                     <div className="legend-item flex items-center">
-                      <div className="legend-color rounded border-2 border-[#a855f7]/50 bg-[#a855f7]/10"></div>
-                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Admin Boundaries</span>
+                      <div className="legend-color rounded border-2 border-[#e11d48] border-dashed"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Panchayath Boundary</span>
+                    </div>
+                    <div className="legend-item flex items-center">
+                      <div className="legend-color rounded border-2 border-[#ffffff]"></div>
+                      <span className="text-[7px] md:text-[11px] font-black uppercase tracking-widest text-neutral-400">Taluk Boundary</span>
                     </div>
                     <div className="legend-item flex items-center">
                       <div className="legend-color rounded bg-[#ef4444] shadow-[0_0_10px_rgba(239,68,68,0.4)]"></div>
@@ -411,27 +464,49 @@ function App() {
 
               {selectedFeature && (
                 <div className="map-info-overlay">
-                  <div className="overlay-header">
+                  {/* Mobile Sheet Handle */}
+                  <div className="md:hidden w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 -mb-2"></div>
+
+                  <div className="overlay-header py-4 px-6">
                     <div className="title-group">
-                      <span className="source-tag">
-                        {selectedFeature.properties.PANCHAYAT ? 'ADMINISTRATIVE AREA' : (selectedFeature._layerName || 'ANALYSIS AREA').toUpperCase()}
+                      <span className="source-tag text-[#38bdf8]">
+                        {selectedFeature._layerName === 'panchayat' ? 'PANCHAYAT NAME' :
+                          selectedFeature._layerName === 'taluk' ? 'TALUK NAME' :
+                            'VILLAGE NAME'}
                       </span>
-                      <h3>{selectedFeature.properties.PANCHAYAT || `Feature Details`}</h3>
+                      <div className="flex flex-col gap-1 mt-1">
+                        <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">
+                          {(() => {
+                            const p = selectedFeature.properties;
+                            const collectionName = layers[selectedFeature._layerName]?.name;
+                            let engName = p.name || p.NAME || p.NAME_EN || p.PANCHAYAT || p.PANCHAYATH || p.VILL_NAME || p['VILL NAME'] || p.VILLAGE || p.VILLAGE_EN || p.TALUK || p.TALUK_NAM || p.TALUK_NA || p.V_NAME || p.V_name || p.VNAME || collectionName || selectedFeature.name;
+
+                            // If we still get 'KERALA' but have a better collection name, use that instead
+                            if (engName === 'KERALA' && collectionName) {
+                              engName = collectionName;
+                            }
+
+                            if (engName) return engName.replace(/_/g, ' ');
+                            const fallback = Object.entries(p).find(([k, v]) =>
+                              typeof v === 'string' && v.length > 0 && !/[\u0D00-\u0D7F]/.test(v) &&
+                              !['UID', 'SOURCE', 'ID', 'ATTR', 'CODE'].some(s => k.toUpperCase().includes(s))
+                            );
+                            return fallback ? fallback[1] : "Selected Region";
+                          })()}
+                        </h3>
+                        <span className="text-sm font-bold text-[#38bdf8]/80 block mt-0.5">
+                          {(() => {
+                            const p = selectedFeature.properties;
+                            const malEntry = Object.entries(p).find(([k, v]) =>
+                              typeof v === 'string' && /[\u0D00-\u0D7F]/.test(v)
+                            );
+                            return malEntry ? malEntry[1] : (p.MAL_NAME || p.NAME_MAL || p.VILL_MAL || p.VILLAGE_MA || "");
+                          })()}
+                        </span>
+                      </div>
+                      <div className="h-0.5 w-12 bg-[#38bdf8] mt-2 rounded-full shadow-[0_0_10px_#38bdf8]"></div>
                     </div>
                     <button className="close-overlay" onClick={() => setSelectedFeature(null)}>×</button>
-                  </div>
-                  <div className="overlay-content">
-                    {selectedFeature.properties.PANCHAYAT ? (
-                      <div className="info-grid">
-                        <div className="info-item"><label>District</label><span>{selectedFeature.properties.DISTRICT}</span></div>
-                        <div className="info-item"><label>Block</label><span>{selectedFeature.properties.BLOCK}</span></div>
-                      </div>
-                    ) : (
-                      <div className="info-grid">
-                        <div className="info-item"><label>Layer</label><span>{selectedFeature._layerName}</span></div>
-                        {selectedFeature.properties.DN && <div className="info-item"><label>DN</label><span style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</span></div>}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -530,7 +605,7 @@ function App() {
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
           layers={layers}
-          onSearch={handleSearchPanchayat}
+          onSearch={handleSpatialSearch}
           riskFilter={riskFilter}
           setRiskFilter={setRiskFilter}
           visibleLayers={visibleLayers}
