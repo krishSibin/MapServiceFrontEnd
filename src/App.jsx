@@ -280,24 +280,24 @@ function App() {
 
       <div className="main-content-wrapper flex-1 overflow-hidden relative">
         <div className="dashboard-container">
-          <section className="grid grid-cols-4 gap-2 md:gap-3 flex-shrink-0">
+          <section className="grid grid-cols-4 gap-2 md:gap-3 flex-shrink-0 h-fit">
             {stats.map((stat, i) => (
-              <div key={i} className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-4 rounded-lg md:rounded-xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 hover:border-white/30 transition-all group">
-                <div className="w-6 h-6 md:w-12 md:h-12 rounded-md md:rounded-xl flex items-center justify-center transition-transform group-hover:scale-110" style={{ color: stat.color, background: `${stat.color}10` }}>
-                  <stat.icon size={14} className="md:w-6 md:h-6" strokeWidth={2.5} />
+              <div key={i} className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-3 rounded-lg md:rounded-xl flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-3 hover:border-white/30 transition-all group">
+                <div className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-lg flex items-center justify-center transition-transform group-hover:scale-110" style={{ color: stat.color, background: `${stat.color}10` }}>
+                  <stat.icon size={14} className="md:w-5 md:h-5" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col items-center md:items-start min-w-0 text-center md:text-left">
-                  <span className="text-[7px] md:text-[10px] font-black uppercase tracking-[0.05em] md:tracking-[0.2em] text-neutral-500 mb-0.5 md:mb-1 truncate w-full">{stat.label.split(' ')[0]}</span>
+                  <span className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.05em] md:tracking-[0.15em] text-neutral-500 mb-0.5 md:mb-0.5 truncate w-full">{stat.label.split(' ')[0]}</span>
                   <div className="flex items-baseline gap-0.5 md:gap-1">
-                    <span className="text-[10px] md:text-2xl font-black text-white">{stat.value}</span>
-                    <span className="text-[6px] md:text-xs font-bold text-neutral-500">{stat.unit}</span>
+                    <span className="text-[10px] md:text-xl font-black text-white">{stat.value}</span>
+                    <span className="text-[6px] md:text-[10px] font-bold text-neutral-500">{stat.unit}</span>
                   </div>
                 </div>
               </div>
             ))}
           </section>
 
-          <main className="relative flex-1 min-h-[300px] md:min-h-[400px]">
+          <main className="relative flex-1 min-h-[250px] md:min-h-0">
             <div className={`absolute inset-0 bg-[#0b1219] border border-white/10 rounded-2xl overflow-hidden shadow-2xl ${mapTheme}-theme`}>
               <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[1000] bg-[#0b1219]/80 backdrop-blur-md border border-white/10 p-1 rounded-lg md:rounded-xl flex gap-1 shadow-2xl">
                 <button
@@ -516,13 +516,13 @@ function App() {
 
           {showBottomPanel && (
             <section className="grid grid-cols-3 gap-2 md:gap-4 flex-shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-4 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-3 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <Waves size={12} className="text-[#ef4444] md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">FLOOD IMPACT</span>
                 </div>
-                <div className="flex flex-col items-center justify-center flex-1 py-3 md:py-6 w-full">
-                  <div className="flex items-end justify-center gap-2 md:gap-8 lg:gap-12 h-[45px] md:h-[60px] xl:h-[80px] w-full px-1 lg:px-4 relative mb-2 text-center">
+                <div className="flex flex-col items-center justify-center flex-1 py-1 md:py-2 w-full">
+                  <div className="flex items-end justify-center gap-2 md:gap-8 lg:gap-12 h-[35px] md:h-[50px] xl:h-[70px] w-full px-1 lg:px-4 relative mb-2 text-center">
                     {floodTimeSeries.map((point, i) => {
                       const isActive = point.date === activeDate;
                       return (
@@ -554,16 +554,16 @@ function App() {
                       );
                     })}
                   </div>
-                  <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-4 md:mt-6 tracking-widest uppercase truncate w-full text-center">Peak: {Math.round(Math.max(...floodTimeSeries.map(d => d.area), 0)).toLocaleString()} ha</span>
+                  <span className="text-[5px] md:text-[10px] font-bold text-neutral-600 mt-2 md:mt-3 tracking-widest uppercase truncate w-full text-center">Peak: {Math.round(Math.max(...floodTimeSeries.map(Point => Point.area), 0)).toLocaleString()} ha</span>
                 </div>
               </div>
 
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-4 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-3 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <TrafficCone size={12} className="text-orange-400 md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INFRASTRUCTURE</span>
                 </div>
-                <ul className="flex flex-col gap-1 md:gap-4">
+                <ul className="flex flex-col gap-1 md:gap-2">
                   <li className="flex flex-col md:flex-row justify-between items-center py-0.5 border-b border-white/5 text-[6px] md:text-xs">
                     <span className="font-bold text-neutral-400 truncate w-full text-center md:text-left">HW 24</span>
                     <span className="px-1 py-0 shadow-sm rounded-sm bg-red-500/10 text-red-500 text-[5px] md:text-[8px] font-black uppercase">CLOSED</span>
@@ -575,7 +575,7 @@ function App() {
                 </ul>
               </div>
 
-              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-6 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-6 min-w-0 overflow-hidden">
+              <div className="bg-[#0b1219]/60 backdrop-blur-sm border border-white/10 p-2 md:p-4 rounded-lg md:rounded-2xl flex flex-col gap-2 md:gap-3 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-1.5 md:gap-3">
                   <TrendingUp size={12} className="text-[#38bdf8] md:w-5 md:h-5" />
                   <span className="text-[6px] md:text-xs font-black uppercase tracking-widest text-neutral-400 truncate">INTENSITY</span>
