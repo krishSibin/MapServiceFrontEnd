@@ -6,24 +6,19 @@ import { Loader2, Activity, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Helper component to handle map movement
-const MapController = ({ searchTarget, selectedFeature, onSearchComplete, allLayers }) => {
+const MapController = ({ searchTarget, selectedFeature, onSearchComplete, allLayers, setIsLocating }) => {
     const map = useMap();
     const initialZoomRef = useRef(false);
-    const lastLayerKeys = useRef("");
 
     // Aggressive Auto-Fit when data arrives/changes
     useEffect(() => {
         if (!allLayers || Object.keys(allLayers).length === 0) return;
 
         // USER FIX: Only auto-fit once during the initial startup.
-        // Once the map has focused on the data, ignore any further layer toggles.
-        if (initialZoomRef.current) {
-            return;
-        }
+        if (initialZoomRef.current) return;
 
         const handleFit = () => {
             try {
-                // Focus on panchayat or taluk as the main administrative unit
                 const targetLayer = allLayers.panchayat || allLayers.taluk || allLayers.village || Object.values(allLayers).find(l => l.features?.length > 0);
 
                 if (targetLayer && targetLayer.features?.length > 0) {
@@ -34,19 +29,23 @@ const MapController = ({ searchTarget, selectedFeature, onSearchComplete, allLay
                         map.invalidateSize();
                         map.flyToBounds(bounds, {
                             padding: [50, 50],
-                            duration: initialZoomRef.current ? 1.5 : 2.5,
+                            duration: 2.0,
                             easeLinearity: 0.1
                         });
                         initialZoomRef.current = true;
+
+                        // Signal that we've found our home, loader can now exit safely
+                        setTimeout(() => setIsLocating && setIsLocating(false), 500);
                     }
                 }
             } catch (err) {
                 console.warn("Auto-fit error:", err);
+                setIsLocating && setIsLocating(false);
             }
         };
 
         handleFit();
-    }, [allLayers, map]);
+    }, [allLayers, map, setIsLocating]);
 
     // Focus on Search Target
     useEffect(() => {
@@ -194,7 +193,8 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, selectedFeature, ge
 });
 
 const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selectedFeature, onSelect, onSearchComplete }) => {
-    const isDataLoading = isInitialLoad;
+    const [isLocating, setIsLocating] = React.useState(true);
+    const isDataLoading = isInitialLoad || (isLocating && Object.keys(layers || {}).length > 0);
 
     const getStyle = React.useCallback((layerName, feature, selectedFeature) => {
         // ROBUST MATCHING FOR ALL ADMINISTRATIVE LEVELS
@@ -293,7 +293,7 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
             >
                 <TileLayer url={tileUrl} />
 
-                <MapController searchTarget={searchTarget} selectedFeature={selectedFeature} onSearchComplete={onSearchComplete} allLayers={layers} />
+                <MapController searchTarget={searchTarget} selectedFeature={selectedFeature} onSearchComplete={onSearchComplete} allLayers={layers} setIsLocating={setIsLocating} />
 
                 {sortedLayers.map(([name, data]) => (
                     <Pane
