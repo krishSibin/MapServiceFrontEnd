@@ -258,10 +258,10 @@ function App() {
     const villageCount = layers.village ? layers.village.features.filter(f => f.properties?.date === activeDate).length : 0;
 
     return [
-      { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#00cfbf" },
-      { label: "Crops Affected", value: Math.round(cropArea).toLocaleString(), unit: "ha", icon: Sprout, color: "#22c55e" },
-      { label: "Roads Impacted", value: Math.round(roadLength).toLocaleString(), unit: "km", icon: MapPin, color: "#f59e0b" },
-      { label: "Villages Affected", value: villageCount.toString(), unit: "", icon: Home, color: "#ef4444" }
+      { label: 'Flood Extent', value: Math.round(floodArea).toLocaleString(), unit: 'ha', icon: Waves, color: '#00cfbf' },
+      { label: 'Crops Affected', value: Math.round(cropArea).toLocaleString(), unit: 'ha', icon: Sprout, color: '#22c55e' },
+      { label: 'Roads Impacted', value: Math.round(roadLength).toLocaleString(), unit: 'km', icon: MapPin, color: '#f59e0b' },
+      { label: 'Villages At Risk', value: villageCount, unit: '', icon: Home, color: '#ef4444' }
     ];
   }, [layers, activeDate]);
 
@@ -279,27 +279,49 @@ function App() {
 
 
   const handleSpatialSearch = React.useCallback((name) => {
-    // Search across all administrative/village layers
+    // Helper to find layer by case-insensitive name
+    const findLayer = (target) => {
+      const actualKey = Object.keys(layers).find(k => k.toLowerCase() === target.toLowerCase());
+      return actualKey ? layers[actualKey] : null;
+    };
+
+    // Search across administrative layers (Panchayat only)
     const targetLayers = [
-      { data: layers.village, field: 'VILLAGE' },
-      { data: layers.panchayat, field: 'PANCHAYAT' }
+      { data: findLayer('panchayat'), field: 'PANCHAYAT', name: 'panchayat' }
     ].filter(l => l.data && l.data.features);
 
     let foundFeature = null;
+    let foundInLayer = 'village';
+
+
     for (const layer of targetLayers) {
-      foundFeature = layer.data.features.find(
-        f => (
-          f.properties[layer.field] ||
-          f.properties.PANCHAYATH ||
-          f.properties.NAME ||
-          f.properties.name
-        )?.toLowerCase() === name.toLowerCase()
-      );
-      if (foundFeature) break;
+      foundFeature = layer.data.features.find(f => {
+        const p = f.properties;
+        const nameToTest = (
+          p[layer.field] ||
+          p.NAME ||
+          p.name ||
+          p.NAME_EN ||
+          p.PANCHAYAT ||
+          p.PANCHAYATH ||
+          p.VILLAGE ||
+          p.VILL_NAME ||
+          p.VNAME ||
+          p.TALUK
+        );
+        return nameToTest?.toString().trim().toLowerCase() === name.trim().toLowerCase();
+      });
+
+      if (foundFeature) {
+        foundInLayer = layer.name;
+        break;
+      }
     }
 
     if (foundFeature) {
-      setSearchTarget({ ...foundFeature, _searchId: Date.now() });
+      const featureWithContext = { ...foundFeature, _layerName: foundInLayer };
+      setSearchTarget({ ...featureWithContext, _searchId: Date.now() });
+      setSelectedFeature(featureWithContext);
       setIsDrawerOpen(false);
     }
   }, [layers.panchayat, layers.taluk, layers.village]);
@@ -344,7 +366,7 @@ function App() {
                   <stat.icon size={14} className="md:w-5 md:h-5" strokeWidth={2.5} />
                 </div>
                 <div className="flex flex-col items-center md:items-start min-w-0 text-center md:text-left">
-                  <span className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.05em] md:tracking-[0.15em] text-neutral-500 mb-0.5 md:mb-0.5 truncate w-full">{stat.label.split(' ')[0]}</span>
+                  <span className="text-[7px] md:text-[9px] font-black uppercase tracking-wide md:tracking-[0.15em] text-neutral-500 mb-0.5 md:mb-0.5 whitespace-nowrap">{stat.label}</span>
                   <div className="flex items-baseline gap-0.5 md:gap-1">
                     <span className="text-[10px] md:text-xl font-black text-white">{stat.value}</span>
                     <span className="text-[6px] md:text-[10px] font-bold text-neutral-500">{stat.unit}</span>
@@ -435,7 +457,7 @@ function App() {
               )}
 
               {/* Premium Responsive Date Timeline Slider with Optimized Animation */}
-              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-[92%] md:w-max md:max-w-[400px]">
+              <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-[88%] md:w-max md:max-w-[400px]">
                 <AnimatePresence mode="wait">
                   {showSlider ? (
                     <motion.div
@@ -668,10 +690,10 @@ function App() {
                 {/* Main Content */}
                 <div className="flex flex-col items-center justify-center w-full mt-1 md:mt-4">
                   <div className="flex items-baseline gap-0.5 md:gap-1">
-                    <span className="text-sm md:text-4xl font-bold text-white tracking-tighter">184</span>
-                    <span className="text-[5px] md:text-xs font-bold text-neutral-400">mm</span>
+                    <span className="text-base md:text-3xl font-bold text-white tracking-tighter">184</span>
+                    <span className="text-[6px] md:text-sm font-bold text-neutral-400">mm</span>
                   </div>
-                  <span className="text-[3px] md:text-[7px] font-black uppercase tracking-[0.2em] text-neutral-500 mt-0.5 md:mt-1">HOURLY RAINFALL</span>
+                  <span className="text-[4px] md:text-[9px] font-black uppercase tracking-[0.2em] text-neutral-500 mt-0.5 md:mt-1">HOURLY RAINFALL</span>
 
                   {/* Wave Graphic */}
                   <div className="w-full h-[12px] md:h-[40px] relative my-1 md:my-2 overflow-hidden flex items-center justify-center opacity-80">
@@ -684,18 +706,18 @@ function App() {
                 </div>
 
                 {/* Footer Stats */}
-                <div className="w-full grid grid-cols-3 bg-[#0b1219]/80 rounded md:rounded-lg p-1 md:p-2 border border-white/5 mt-auto">
+                <div className="w-full grid grid-cols-3 bg-[#0b1219]/80 rounded md:rounded-lg p-1 md:p-2.5 border border-white/5 mt-auto">
                   <div className="flex flex-col items-center justify-center border-r border-white/10">
-                    <span className="text-[3px] md:text-[6px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">WATER LVL</span>
-                    <span className="text-[5px] md:text-[10px] font-bold text-[#38bdf8]">8.4m</span>
+                    <span className="text-[4px] md:text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">WATER LVL</span>
+                    <span className="text-[6.5px] md:text-[13px] font-bold text-[#38bdf8]">8.4m</span>
                   </div>
                   <div className="flex flex-col items-center justify-center border-r border-white/10">
-                    <span className="text-[3px] md:text-[6px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">INFLOW</span>
-                    <span className="text-[5px] md:text-[10px] font-bold text-[#38bdf8]">4k c/s</span>
+                    <span className="text-[4px] md:text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">INFLOW</span>
+                    <span className="text-[6.5px] md:text-[13px] font-bold text-[#38bdf8]">4k c/s</span>
                   </div>
                   <div className="flex flex-col items-center justify-center">
-                    <span className="text-[3px] md:text-[6px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">RISK</span>
-                    <span className="text-[5px] md:text-[10px] font-bold text-[#ef4444]">SEVERE</span>
+                    <span className="text-[4px] md:text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-0.5 md:mb-1">RISK</span>
+                    <span className="text-[6.5px] md:text-[13px] font-bold text-[#ef4444]">SEVERE</span>
                   </div>
                 </div>
               </div>

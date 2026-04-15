@@ -49,7 +49,7 @@ export default function AiAssistant() {
             <button
                 onClick={() => setIsOpen(true)}
                 title="Open AI Assistant"
-                className={`absolute bottom-3 md:bottom-6 right-3 md:right-6 z-[1000] bg-[#00cfbf] text-white p-3 md:p-4 rounded-full shadow-[0_0_20px_rgba(0,207,191,0.4)] hover:scale-110 transition-transform ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+                className={`absolute bottom-20 md:bottom-6 right-3 md:right-6 z-[1000] bg-[#00cfbf] text-white p-3 md:p-4 rounded-full shadow-[0_0_20px_rgba(0,207,191,0.4)] hover:scale-110 transition-transform ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
             >
                 <Sparkles size={20} className="animate-pulse drop-shadow-md" />
             </button>

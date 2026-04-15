@@ -55,7 +55,7 @@ const Header = ({ onOpenMenu, onOpenAnalytics, onGoHome }) => {
                     className="flex items-center gap-1.5 px-3 md:px-4 h-8 md:h-9 rounded-lg bg-[#00cfbf] hover:bg-[#00cfbf]/90 text-[#070c14] transition-all font-black text-[9px] md:text-[10px] tracking-widest uppercase shadow-[0_0_20px_rgba(0,207,191,0.25)] hover:shadow-[0_0_28px_rgba(0,207,191,0.4)]"
                 >
                     <Menu size={13} />
-                    <span className="hidden sm:inline">Tools</span>
+                    <span className="hidden sm:inline">Layers</span>
                 </button>
             </div>
         </header>

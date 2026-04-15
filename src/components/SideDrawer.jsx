@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
@@ -11,7 +11,6 @@ import {
     Home,
     Layout,
     Activity,
-    Menu,
     Check
 } from 'lucide-react';
 
@@ -35,7 +34,7 @@ const SideDrawer = ({
     visibleLayers,
     setVisibleLayers
 }) => {
-    const [searchTerm, setSearchTerm] = useState('');
+    const [panchayatSearch, setPanchayatSearch] = useState('');
 
     const toggleLayer = (layerId) => {
         setVisibleLayers(prev =>
@@ -43,29 +42,47 @@ const SideDrawer = ({
         );
     };
 
-    const villageNames = useMemo(() => (
-        layers?.village
-            ? [...new Set(layers.village.features.map(f => f.properties.VILLAGE || f.properties.NAME || f.properties.name))].filter(Boolean).sort()
-            : []
-    ), [layers?.village]);
+    // Helper to find the most likely 'name' property in a feature
+    const extractName = (properties, type) => {
+        const p = properties;
+        // Priority keys based on common GIS conventions
+        const priorityKeys = type === 'panchayat'
+            ? ['PANCHAYAT', 'PANCHAYATH', 'NAME', 'NAME_EN', 'BLOCK_NAME']
+            : ['VILLAGE', 'VILL_NAME', 'NAME', 'NAME_EN', 'VNAME'];
 
-    const filteredVillages = useMemo(() => (
-        searchTerm
-            ? villageNames.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)
-            : []
-    ), [searchTerm, villageNames]);
+        for (const key of priorityKeys) {
+            if (p[key]) return p[key];
+        }
 
-    const panchayatNames = useMemo(() => (
-        layers?.panchayat
-            ? [...new Set(layers.panchayat.features.map(f => f.properties.PANCHAYAT))].filter(Boolean).sort()
-            : []
-    ), [layers?.panchayat]);
+        // Fallback: look for any key containing 'name'
+        const anyNameKey = Object.keys(p).find(k =>
+            k.toLowerCase().includes('name') &&
+            typeof p[k] === 'string' &&
+            !k.toLowerCase().includes('code')
+        );
+
+        return anyNameKey ? p[anyNameKey] : null;
+    };
+
+    // Helper to find a layer in the layers object regardless of case
+    const getLayerData = (name) => {
+        if (!layers) return null;
+        const key = Object.keys(layers).find(k => k.toLowerCase() === name.toLowerCase());
+        return key ? layers[key] : null;
+    };
+
+    const panchayatNames = useMemo(() => {
+        const panchayatLayer = getLayerData('panchayat');
+        return panchayatLayer
+            ? [...new Set(panchayatLayer.features.map(f => extractName(f.properties, 'panchayat')))].filter(Boolean).map(s => s.trim()).sort()
+            : [];
+    }, [layers]);
 
     const filteredPanchayats = useMemo(() => (
-        searchTerm
-            ? panchayatNames.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5)
+        panchayatSearch
+            ? panchayatNames.filter(name => name.toLowerCase().includes(panchayatSearch.toLowerCase())).slice(0, 5)
             : []
-    ), [searchTerm, panchayatNames]);
+    ), [panchayatSearch, panchayatNames]);
 
     return (
         <AnimatePresence>
@@ -77,7 +94,7 @@ const SideDrawer = ({
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     className="side-drawer-new"
                 >
-                    {/* Drawer Header matching target image style */}
+                    {/* Drawer Header */}
                     <div className="p-6 flex items-center justify-between border-b border-white/5 bg-[#141b26]">
                         <div className="flex items-center gap-3">
                             <Layers size={18} className="text-[#00cfbf]" />
@@ -92,28 +109,28 @@ const SideDrawer = ({
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-8 scrollbar-hide">
-                        {/* Search Section */}
+                        {/* Panchayat Search */}
                         <div className="space-y-3">
                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-                                <Search size={12} /> Search Panchayath
+                                <Search size={12} strokeWidth={3} className="text-[#00cfbf]" /> Search Panchayat
                             </div>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Type panchayath name..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-[#161f2c] border border-white/5 p-4 rounded-xl outline-none text-white text-xs placeholder:text-neutral-600"
+                                    placeholder="Type panchayat name..."
+                                    value={panchayatSearch}
+                                    onChange={(e) => setPanchayatSearch(e.target.value)}
+                                    className="w-full bg-[#161f2c] border border-white/5 p-3.5 md:p-4 rounded-xl md:rounded-2xl outline-none text-white text-xs placeholder:text-neutral-600 focus:border-[#00cfbf]/30 transition-all font-medium"
                                 />
-                                {searchTerm && filteredPanchayats.length > 0 && (
-                                    <div className="absolute left-0 right-0 mt-2 bg-[#1a2433] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
+                                {panchayatSearch && filteredPanchayats.length > 0 && (
+                                    <div className="absolute left-0 right-0 mt-2 bg-[#1a2433] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                                         {filteredPanchayats.map((name, i) => (
                                             <button
                                                 key={i}
-                                                className="w-full text-left p-3 hover:bg-[#00cfbf]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
+                                                className="w-full text-left p-3.5 hover:bg-[#00cfbf]/10 text-white/50 text-xs hover:text-[#00cfbf] border-b border-white/5 last:border-0 transition-colors uppercase tracking-wider font-bold"
                                                 onClick={() => {
                                                     onSearch(name);
-                                                    setSearchTerm('');
+                                                    setPanchayatSearch('');
                                                 }}
                                             >
                                                 {name}
@@ -123,43 +140,6 @@ const SideDrawer = ({
                                 )}
                             </div>
                         </div>
-
-                        {/* Village Search (Optional/Secondary) */}
-                        {villageNames.length > 0 && (
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-                                    <Search size={12} /> Search Village
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Type village name..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full bg-[#161f2c] border border-white/5 p-4 rounded-xl outline-none text-white text-xs placeholder:text-neutral-600"
-                                    />
-                                    {searchTerm && filteredVillages.length > 0 && (
-                                        <div className="absolute left-0 right-0 mt-2 bg-[#1a2433] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50">
-                                            {filteredVillages.map((name, i) => (
-                                                <button
-                                                    key={i}
-                                                    className="w-full text-left p-3 hover:bg-[#00cfbf]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
-                                                    onClick={() => {
-                                                        // Note: We need a handleSearchVillage prop if we want to search villages specifically
-                                                        // But for now we just use onSearch which currently points to handleSearchPanchayat
-                                                        // In App.jsx, handleSearchPanchayat checks both layers anyway.
-                                                        onSearch(name);
-                                                        setSearchTerm('');
-                                                    }}
-                                                >
-                                                    {name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
 
                         {/* Layer Control Section */}
                         <div className="space-y-4">
@@ -188,9 +168,9 @@ const SideDrawer = ({
                                     </button>
                                 ))}
 
-                                {/* Dynamic Layers (Auto-discovered from DB) */}
+                                {/* Dynamic Layers */}
                                 {Object.keys(layers || {})
-                                    .filter(key => key.toLowerCase() !== 'boundary') // Explicitly filter out the generic 'boundary' layer
+                                    .filter(key => key.toLowerCase() !== 'boundary')
                                     .filter(key => !layerItems.some(item => item.id.toLowerCase() === key.toLowerCase()))
                                     .map(key => (
                                         <button

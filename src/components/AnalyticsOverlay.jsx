@@ -113,7 +113,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                         <div className="px-6 py-6 md:py-8 flex items-center justify-between">
                             <div>
                                 <h2 className="text-2xl md:text-3xl font-outfit font-black text-white uppercase tracking-tight">Spatial Analytics</h2>
-                                <p className="text-neutral-500 text-xs md:text-sm font-medium tracking-widest uppercase mt-1">Real-time Environmental Insights</p>
+                                <p className="text-neutral-500 text-xs md:text-sm font-medium tracking-widest uppercase mt-1">The Operational Choice</p>
                             </div>
                             <button
                                 onClick={handleClose}
