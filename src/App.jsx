@@ -29,7 +29,8 @@ import {
 } from 'lucide-react';
 import './App.css';
 
-const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const RAW_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const SOCKET_URL = RAW_BACKEND_URL.endsWith('/') ? RAW_BACKEND_URL.slice(0, -1) : RAW_BACKEND_URL;
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,18 +112,44 @@ function App() {
     const processIncomingData = (data) => {
       if (!data || Object.keys(data).length === 0) return;
 
-      console.time("🗺️ Data Processing");
-      const freshData = { ...layers }; // Start with existing to avoid blank out
+      const layerEntries = Object.entries(data);
+      const freshData = { ...layers };
+      let layerIdx = 0;
 
-      // Process in small batches or direct assignment to prevent blocking
-      Object.entries(data).forEach(([layerName, layerData]) => {
-        // Skip re-processing if it hasn't changed (simple reference check for speed)
-        if (layers[layerName] === layerData) return;
+      // Batch Processor: Handle each layer in its own event loop turn to keep UI responsive
+      const processNextBatch = () => {
+        if (layerIdx >= layerEntries.length) {
+          setLayers({ ...freshData });
+          setIsInitialLoad(false);
+          // Save to cache in background
+          localforage.setItem('map-layers-cache', freshData).catch(err => console.error("Cache Error:", err));
+
+          // Auto-discover NEW non-standard layers
+          const incomingLayerKeys = Object.keys(freshData);
+          setVisibleLayers(prev => {
+            const predefinedLayers = ['panchayat', 'taluk', 'flood', 'crop', 'roads', 'village', 'settlement'];
+            const newKeys = incomingLayerKeys.filter(k =>
+              k.toLowerCase() !== 'boundary' &&
+              !predefinedLayers.includes(k.toLowerCase()) &&
+              !prev.includes(k)
+            );
+            return newKeys.length > 0 ? [...prev, ...newKeys] : prev;
+          });
+          return;
+        }
+
+        const [layerName, layerData] = layerEntries[layerIdx];
+
+        // Skip re-processing if it hasn't changed
+        if (layers[layerName] === layerData) {
+          layerIdx++;
+          processNextBatch();
+          return;
+        }
 
         freshData[layerName] = {
           ...layerData,
           features: (layerData.features || []).map((f, idx) => {
-            // Only add _uid if it doesn't exist to save processing
             if (f.properties?._uid) return f;
             return {
               ...f,
@@ -130,26 +157,13 @@ function App() {
             };
           })
         };
-      });
 
-      setLayers(freshData);
-      setIsInitialLoad(false);
-      console.timeEnd("🗺️ Data Processing");
+        layerIdx++;
+        // Increased delay to 50ms to give Landing Page priority for animations
+        setTimeout(processNextBatch, 50);
+      };
 
-      // Save to cache in background
-      localforage.setItem('map-layers-cache', freshData).catch(err => console.error("Cache Error:", err));
-
-      // Auto-discover NEW non-standard layers
-      const incomingLayerKeys = Object.keys(freshData);
-      setVisibleLayers(prev => {
-        const predefinedLayers = ['panchayat', 'taluk', 'flood', 'crop', 'roads', 'village', 'settlement'];
-        const newKeys = incomingLayerKeys.filter(k =>
-          k.toLowerCase() !== 'boundary' &&
-          !predefinedLayers.includes(k.toLowerCase()) &&
-          !prev.includes(k)
-        );
-        return newKeys.length > 0 ? [...prev, ...newKeys] : prev;
-      });
+      processNextBatch();
     };
 
     // 1. Load from Persistent Cache First (IMMEDIATE)
@@ -160,26 +174,39 @@ function App() {
       }
     });
 
-    // 2. Fetch Fresh Data (Parallel / Background)
-    const fetchData = async () => {
+    // 2. Fetch Fresh Data (Parallel / Background with Retry)
+    const fetchData = async (attempt = 0) => {
       try {
         const res = await fetch(`${SOCKET_URL}/api/geojson`);
+
+        if (res.status === 503 && attempt < 10) {
+          console.log(`⌛ Server is still booting (Attempt ${attempt + 1})...`);
+          setTimeout(() => fetchData(attempt + 1), 5000);
+          return;
+        }
+
         const data = await res.json();
-        if (!isLive) {
+        if (!isLive && data && Object.keys(data).length > 0) {
           console.log("🚀 HTTP: Fresh sync complete");
           processIncomingData(data);
         }
       } catch (err) {
+        if (attempt < 5) {
+          setTimeout(() => fetchData(attempt + 1), 5000);
+        }
         console.error("❌ Fetch Error:", err);
       }
     };
 
-    fetchData();
+    // DEFER FETCH: Wait 5 seconds so Landing Page animations can settle
+    const syncTimer = setTimeout(fetchData, 5000);
 
-    // 3. Setup Socket
+    // 3. Setup Socket (Optimized for Production/Render)
     const socket = io(SOCKET_URL, {
-      reconnectionAttempts: 20,
-      reconnectionDelay: 3000
+      reconnectionAttempts: 10,
+      reconnectionDelay: 5000,
+      transports: ['websocket', 'polling'], // Fallback to polling if websocket fails
+      timeout: 20000
     });
 
     socket.on("geojson-update", (data) => {
@@ -190,6 +217,7 @@ function App() {
 
     return () => {
       isLive = true;
+      clearTimeout(syncTimer);
       socket.disconnect();
     };
   }, [isAuthenticated, SOCKET_URL]);
@@ -417,16 +445,8 @@ function App() {
                       exit={{ opacity: 0, y: 15, scale: 0.98 }}
                       transition={{ duration: 0.2, ease: "circOut" }}
                       style={{ willChange: "transform, opacity" }}
-                      className="bg-[#0b1219]/95 backdrop-blur-md border border-white/10 p-1.5 md:p-2.5 px-3 md:px-5 rounded-[1rem] shadow-[0_15px_50px_rgba(0,0,0,0.7)] flex items-center gap-2 md:gap-4 w-full pointer-events-auto relative"
+                      className="bg-[#0b1219]/95 backdrop-blur-md border border-white/10 p-1.5 md:p-2.5 px-3 md:px-5 rounded-[1rem] shadow-[0_15px_50px_rgba(0,0,0,0.7)] flex items-center gap-2 md:gap-4 w-full pointer-events-auto"
                     >
-                      <button
-                        onClick={() => setShowSlider(false)}
-                        className="absolute -top-2 -right-2 w-6 h-6 md:w-7 md:h-7 bg-[#0b1219] border border-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all shadow-xl z-20"
-                        title="Close Timeline"
-                      >
-                        <X size={12} className="md:w-3.5 md:h-3.5" />
-                      </button>
-
                       <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0 border-r border-white/10 pr-2 md:pr-4 h-4 md:h-5">
                         <Calendar size={11} className="text-[#00cfbf] md:w-3.5 md:h-3.5" />
                         <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[sliderIndex] || availableDates[0])}</span>
@@ -464,6 +484,14 @@ function App() {
                           <div className="absolute inset-0 bg-[#00cfbf]/50 blur-[1px]"></div>
                         </div>
                       </div>
+
+                      <button
+                        onClick={() => setShowSlider(false)}
+                        className="ml-1 md:ml-2 p-1 md:p-1.5 rounded-full hover:bg-white/10 text-neutral-500 hover:text-white transition-all shrink-0"
+                        title="Close Timeline"
+                      >
+                        <X size={14} className="md:w-4 md:h-4" />
+                      </button>
                     </motion.div>
                   ) : (
                     <motion.button
