@@ -54,6 +54,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
         { id: "cyclone", title: "Cyclone", desc: "Trajector mapping and wind speed intensity tracking.", icon: <Wind />, isSoon: true }
     ]
 
+    const handleLaunchClick = (e: React.MouseEvent, action?: () => void) => {
+        e.preventDefault();
+        if (selectedId !== "flood") {
+            alert("This module is currently in development. Please select the Flood module to continue.");
+            return;
+        }
+        if (action) {
+            action();
+        }
+    };
+
     return (
         <div ref={containerRef} className="dark min-h-screen bg-black text-white selection:bg-[#00cfbf] font-inter relative overflow-x-hidden">
 
@@ -107,7 +118,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
 
                     {/* Single Login button */}
                     <button
-                        onClick={onLogin ?? onStart}
+                        onClick={(e) => handleLaunchClick(e, onLogin ?? onStart)}
                         className="px-4 md:px-8 py-2 md:py-3 relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-bold text-sm md:text-base transition-all duration-300 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_30px_rgba(0,207,191,0.5)] active:scale-95 group flex items-center gap-2"
                     >
                         <span className="relative z-10">Launch</span>
@@ -130,10 +141,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
                             Multi-Hazard GIS Dashboard
                         </div>
                         <h1 className="hero-heading font-outfit font-black tracking-tighter leading-[0.85] mb-6 md:mb-10 text-gradient-premium">
-                            Resilience, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
+                            Intelligence, <br /> <span className="bg-gradient-to-r from-[#00cfbf] to-blue-500 bg-clip-text text-transparent italic">Mapped.</span>
                         </h1>
                         <p className="hero-subtitle text-center text-neutral-400 leading-relaxed font-medium text-balance drop-shadow-md pb-4">
-                            Geospatial intelligence platform for multi-hazard risk assessment monitoring, risk assessment, and decision support.
+                            Geospatial intelligence platform for multi-hazard monitoring, risk assessment, and decision support
                         </p>
                     </motion.div>
 
@@ -211,7 +222,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
                             Select Your <span className="text-[#00cfbf]">Hazard Type.</span>
                         </motion.h2>
                         <p className="text-neutral-400 max-w-xl mx-auto text-sm md:text-xl font-medium tracking-tight opacity-60">
-                            Deploy specialized mission-critical monitoring systems tailored to the objective.
+                            Specialized mission-critical monitoring and decision support systems
                         </p>
                     </div>
 
@@ -241,13 +252,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
             >
                 <div className="flex flex-col items-center justify-center flex-grow">
                     <div className="inline-block px-3 py-1 rounded-full bg-[#00cfbf]/10 border border-[#00cfbf]/20 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] mb-6 md:mb-12 text-[#00cfbf] animate-pulse">
-                        Engine v2.0
+                        Application v 2.0
                     </div>
                     <h2 className="cta-heading font-outfit font-black tracking-tighter leading-[0.85] uppercase text-gradient-premium">
                         MAP THE <br /> <span className="text-[#00cfbf]">UNSEEN DATA.</span>
                     </h2>
                     <button
-                        onClick={onStart}
+                        onClick={(e) => handleLaunchClick(e, onStart)}
                         className="cta-launch-btn relative overflow-hidden bg-[#00cfbf]/10 border border-[#00cfbf]/50 text-[#00cfbf] rounded-full font-black transition-all duration-500 hover:bg-[#00cfbf] hover:text-black hover:shadow-[0_0_80px_rgba(0,207,191,0.6)] active:scale-95 group flex items-center justify-center gap-2 md:gap-4 mx-auto"
                     >
                         <span className="relative z-10 tracking-widest uppercase">LAUNCH PLATFORM</span>
@@ -274,7 +285,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, onLogin, onSignup })
                         </div>
                     </div>
                 </div>
-                <footer className="absolute bottom-6 md:bottom-12 left-0 right-0 text-center text-neutral-700 text-[7px] md:text-[9px] tracking-[0.3em] md:tracking-[0.6em] font-black uppercase font-inter opacity-40">
+                <footer className="absolute bottom-6 md:bottom-12 left-0 right-0 text-center text-neutral-400 text-[7px] md:text-[9px] tracking-[0.3em] md:tracking-[0.6em] font-black uppercase font-inter opacity-70">
                     &copy; 2026 Nexira Spatial &bull; Systems <span className="text-[#00cfbf]">Active</span>
                 </footer>
             </motion.section>
@@ -336,7 +347,7 @@ const FeatureCard = ({ icon, title, desc, isSoon, isSelected, onClick }: { icon:
                     className="flex items-center justify-center md:justify-between gap-3 md:gap-0 w-full"
                 >
                     <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] animate-pulse text-[#00cfbf]">
-                        {isSoon ? 'Coming Soon' : 'Active'}
+                        {isSoon ? 'In Progress' : 'Active'}
                     </span>
                     <ArrowRight className="w-3 h-3 md:w-6 md:h-6 text-[#00cfbf]" />
                 </motion.div>

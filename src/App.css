@@ -10,7 +10,7 @@
   --dash-text-primary: #f8fafc;
   --dash-text-secondary: #64748b;
   --dash-accent-teal: #00cfbf;
-  --dash-accent-blue: #38bdf8;
+  --dash-accent-blue: #00cfbf;
   --dash-accent-green: #22c55e;
   --dash-accent-orange: #f59e0b;
   --dash-accent-red: #ef4444;
@@ -313,10 +313,10 @@
   -webkit-appearance: none;
   height: 24px;
   width: 12px;
-  background: #38bdf8;
+  background: #00cfbf;
   cursor: ew-resize;
   border-radius: 6px;
-  box-shadow: 0 0 12px #38bdf8;
+  box-shadow: 0 0 12px #00cfbf;
   border: none;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -324,23 +324,23 @@
 .timeline-slider::-moz-range-thumb {
   height: 24px;
   width: 12px;
-  background: #38bdf8;
+  background: #00cfbf;
   cursor: ew-resize;
   border-radius: 6px;
-  box-shadow: 0 0 12px #38bdf8;
+  box-shadow: 0 0 12px #00cfbf;
   border: none;
 }
 
 .timeline-slider:hover::-webkit-slider-thumb {
   transform: scaleY(1.3);
-  box-shadow: 0 0 20px #38bdf8, 0 0 40px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 20px #00cfbf, 0 0 40px rgba(0, 207, 191, 0.3);
 }
 
 .timeline-tick {
   position: absolute;
-  width: 2px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.2);
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 207, 191, 0.4);
   border-radius: 50%;
   top: 50%;
   transform: translateY(-50%);
@@ -348,10 +348,20 @@
   will-change: transform, opacity;
 }
 
+.timeline-tick.highlighted {
+  background: #00cfbf;
+  width: 4px;
+  height: 4px;
+  box-shadow: 0 0 8px rgba(0, 207, 191, 0.6);
+}
+
 .timeline-tick.active {
-  background: #38bdf8;
-  box-shadow: 0 0 10px #38bdf8;
+  background: #ffffff;
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 15px #00cfbf;
   transform: translateY(-50%) scale(1.5);
+  z-index: 10;
 }
 
 /* ===== MAP LEGEND ===== */

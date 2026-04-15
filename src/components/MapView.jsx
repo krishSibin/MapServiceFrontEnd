@@ -203,32 +203,8 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
         const targetId = getId(selectedFeature);
         const currentId = getId(feature);
 
-        const isSelected = selectedFeature && (
-            layerName === selectedFeature._layerName && (
-                (feature.properties?._uid && feature.properties?._uid === selectedFeature.properties?._uid) ||
-                (targetId && targetId === currentId)
-            )
-        );
+        // --- Selection Highlight is now handled by the top-level selection-pane for maximum clarity ---
 
-        if (isSelected) {
-            let shouldHighlight = true;
-            if (layerName === 'taluk' && layers) {
-                const activeLayers = Object.keys(layers).filter(k => layers[k]);
-                if (activeLayers.length > 1) {
-                    shouldHighlight = false;
-                }
-            }
-
-            if (shouldHighlight) {
-                return {
-                    fillColor: "transparent",
-                    color: layerName === 'panchayat' ? '#1e40af' : "#facc15",
-                    weight: layerName === 'panchayat' ? 4.5 : 5,
-                    opacity: 1,
-                    dashArray: null
-                };
-            }
-        }
 
         // --- Standard Layer Styles ---
         if (layerName === "flood") {
@@ -251,7 +227,7 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
             };
         }
         if (layerName === "village") {
-            return { color: "#38bdf8", weight: 1.8, fillColor: "#38bdf8", fillOpacity: 0.01, opacity: 0.9 };
+            return { color: "#00cfbf", weight: 1.8, fillColor: "#00cfbf", fillOpacity: 0.01, opacity: 0.9 };
         }
         if (layerName === "roads") {
             return { color: "#f59e0b", weight: 3, opacity: 0.8 };
@@ -290,16 +266,16 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
                             <motion.div
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                className="absolute inset-0 border-2 border-t-[#38bdf8] border-r-transparent border-b-transparent border-l-transparent rounded-full"
+                                className="absolute inset-0 border-2 border-t-[#00cfbf] border-r-transparent border-b-transparent border-l-transparent rounded-full"
                             />
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <Globe size={40} className="text-[#38bdf8] opacity-50 animate-pulse" />
+                                <Globe size={40} className="text-[#00cfbf] opacity-50 animate-pulse" />
                             </div>
                         </div>
                         <div className="text-center space-y-2">
                             <div className="text-white font-outfit font-black uppercase tracking-[0.3em] text-xs">Initializing Regions</div>
                             <div className="text-neutral-500 text-[10px] font-medium tracking-[0.2em] uppercase flex items-center gap-2 justify-center">
-                                <Loader2 size={10} className="animate-spin text-[#38bdf8]" /> Syncing Spatial Data Core
+                                <Loader2 size={10} className="animate-spin text-[#00cfbf]" /> Syncing Spatial Data Core
                             </div>
                         </div>
                     </motion.div>
@@ -337,9 +313,42 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
                     </Pane>
                 ))}
 
+                {/* Top-level Selection Highlight (Ensures clear visibility above all layers) */}
+                {selectedFeature && (
+                    <Pane name="selection-pane" style={{ zIndex: 3000, pointerEvents: 'none' }}>
+                        <GeoJSON
+                            key={`selection-${selectedFeature.properties?._uid || 'current'}`}
+                            data={selectedFeature}
+                            style={{
+                                color: "#facc15", // Bright gold for maximum clarity
+                                weight: 6,
+                                opacity: 1,
+                                fillColor: "transparent",
+                                lineCap: "round",
+                                lineJoin: "round",
+                                shadowColor: "#facc15",
+                                shadowBlur: 15
+                            }}
+                            interactive={false}
+                        />
+                        {/* Inner glowing core */}
+                        <GeoJSON
+                            key={`selection-core-${selectedFeature.properties?._uid || 'current'}`}
+                            data={selectedFeature}
+                            style={{
+                                color: "#ffffff",
+                                weight: 2,
+                                opacity: 0.8,
+                                fillColor: "transparent"
+                            }}
+                            interactive={false}
+                        />
+                    </Pane>
+                )}
+
 
             </MapContainer>
-        </div>
+        </div >
     );
 };
 

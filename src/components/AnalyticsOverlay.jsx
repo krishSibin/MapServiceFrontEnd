@@ -56,7 +56,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
             : 0;
 
         return [
-            { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#38bdf8" },
+            { label: "Flooded Area", value: Math.round(floodArea).toLocaleString(), unit: "ha", icon: Waves, color: "#00cfbf" },
             { label: "Crops Affected", value: Math.round(cropArea).toLocaleString(), unit: "ha", icon: Sprout, color: "#22c55e" },
             { label: "Roads Impacted", value: Math.round(roadLength).toLocaleString(), unit: "km", icon: MapPin, color: "#f59e0b" },
             { label: "Villages Affected", value: villageCount.toString(), unit: "", icon: Home, color: "#ef4444" }
@@ -130,7 +130,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                             `}</style>
                             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 text-[#38bdf8] text-[10px] md:text-xs font-black tracking-widest uppercase shrink-0 w-full md:w-auto justify-center md:justify-start">
+                                <div className="flex items-center gap-2 text-[#00cfbf] text-[10px] md:text-xs font-black tracking-widest uppercase shrink-0 w-full md:w-auto justify-center md:justify-start">
                                     <Clock size={14} />
                                     <span>Observation</span>
                                 </div>
@@ -146,7 +146,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                                     key={date}
                                                     onClick={() => setLocalIndex(i)}
                                                     className={`snap-center shrink-0 min-w-[70px] md:min-w-[80px] py-1.5 px-3 rounded-full text-[9px] md:text-xs font-black transition-all duration-150 ${isSelected
-                                                        ? 'bg-[#38bdf8] text-[#0b1219] shadow-[0_2px_12px_rgba(56,189,248,0.4)]'
+                                                        ? 'bg-[#00cfbf] text-[#0b1219] shadow-[0_2px_12px_rgba(0,207,191,0.4)]'
                                                         : 'text-neutral-500 hover:text-white hover:bg-white/5'
                                                         }`}
                                                 >
@@ -169,11 +169,11 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white/5 border border-white/10 p-8 rounded-3xl relative overflow-hidden shadow-2xl group"
                         >
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#38bdf8]/10 blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-[#38bdf8]/20 transition-all duration-700" />
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-[#00cfbf]/10 blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-[#00cfbf]/20 transition-all duration-700" />
 
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4 relative z-10">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-[#38bdf8]/10 flex items-center justify-center text-[#38bdf8]">
+                                    <div className="w-12 h-12 rounded-xl bg-[#00cfbf]/10 flex items-center justify-center text-[#00cfbf]">
                                         <BarChart3 size={24} />
                                     </div>
                                     <div>
@@ -183,7 +183,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                 </div>
                                 <div className="bg-[#0b1219] border border-white/10 px-4 py-2 rounded-lg flex gap-6">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-[#38bdf8]"></div>
+                                        <div className="w-3 h-3 rounded-full bg-[#00cfbf]"></div>
                                         <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Recorded Area</span>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                                     className={`absolute w-full flex justify-center -translate-y-full pb-2 transition-all duration-300 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 -translate-y-[120%]'} z-20 pointer-events-none`}
                                                     style={{ bottom: `${heightPercent}%` }}
                                                 >
-                                                    <div className={`px-2 py-1 rounded bg-[#0b1219] border ${isSelected ? 'border-[#ef4444]' : 'border-[#38bdf8]/50'} shadow-xl flex flex-col items-center whitespace-nowrap`}>
+                                                    <div className={`px-2 py-1 rounded bg-[#0b1219] border ${isSelected ? 'border-[#ef4444]' : 'border-[#00cfbf]/50'} shadow-xl flex flex-col items-center whitespace-nowrap`}>
                                                         <span className={`font-black tracking-widest text-[10px] md:text-xs ${isSelected ? 'text-[#ef4444]' : 'text-white'}`}>
                                                             {Math.round(d.area).toLocaleString()}
                                                         </span>
@@ -224,7 +224,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
 
                                                 {/* The Bar Itself - using App.jsx w-full styling */}
                                                 <div
-                                                    className={`w-full max-w-[30px] mx-auto rounded-t-md md:rounded-t-lg transition-all duration-500 relative overflow-hidden group-hover:opacity-100 ${isSelected ? 'bg-[#ef4444] opacity-100' : 'bg-[#38bdf8] opacity-70 group-hover:bg-[#38bdf8]'
+                                                    className={`w-full max-w-[30px] mx-auto rounded-t-md md:rounded-t-lg transition-all duration-500 relative overflow-hidden group-hover:opacity-100 ${isSelected ? 'bg-[#ef4444] opacity-100' : 'bg-[#00cfbf] opacity-70 group-hover:bg-[#00cfbf]'
                                                         }`}
                                                     style={{
                                                         height: `${heightPercent}%`,
@@ -255,9 +255,9 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="bg-white/5 border border-white/10 p-6 md:p-8 rounded-2xl md:rounded-3xl hover:border-[#38bdf8]/50 transition-all group relative overflow-hidden"
+                                    className="bg-white/5 border border-white/10 p-6 md:p-8 rounded-2xl md:rounded-3xl hover:border-[#00cfbf]/50 transition-all group relative overflow-hidden"
                                 >
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#38bdf8]/10 blur-[60px] -mr-16 -mt-16 group-hover:bg-[#38bdf8]/20 transition-all opacity-0 group-hover:opacity-100" />
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#00cfbf]/10 blur-[60px] -mr-16 -mt-16 group-hover:bg-[#00cfbf]/20 transition-all opacity-0 group-hover:opacity-100" />
 
                                     <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: `${stat.color}15`, color: stat.color }}>
                                         <stat.icon size={24} className="md:w-8 md:h-8" />
@@ -305,7 +305,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                     {[20, 60, 45, 90, 35, 75, 40, 85, 55, 70].map((h, i) => (
                                         <div key={i} className="flex-1 group relative">
                                             <div
-                                                className="w-full bg-white/10 rounded-t-xl group-hover:bg-[#38bdf8]/50 transition-all duration-500 relative"
+                                                className="w-full bg-white/10 rounded-t-xl group-hover:bg-[#00cfbf]/50 transition-all duration-500 relative"
                                                 style={{ height: `${h}%`, background: i === 3 ? 'rgba(34, 197, 94, 0.4)' : (i === 7 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.05)') }}
                                             >
                                                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#0ea5e9] text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
@@ -317,7 +317,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                 </div>
                                 <div className="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
                                     <span className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.2em]">Regional Loss Est: <span className="text-white ml-2">$1.48M</span></span>
-                                    <button className="text-[#38bdf8] text-[10px] font-black uppercase tracking-widest hover:underline">Full Report</button>
+                                    <button className="text-[#00cfbf] text-[10px] font-black uppercase tracking-widest hover:underline">Full Report</button>
                                 </div>
                             </motion.div>
 
@@ -342,7 +342,7 @@ const AnalyticsOverlay = ({ isOpen, onClose, stats, layers, availableDates, curr
                                     <div className="relative w-40 h-40 flex items-center justify-center">
                                         <svg className="w-full h-full transform -rotate-90">
                                             <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/5" />
-                                            <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="440" strokeDashoffset="110" className="text-[#38bdf8] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" />
+                                            <circle cx="80" cy="80" r="70" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="440" strokeDashoffset="110" className="text-[#00cfbf] drop-shadow-[0_0_8px_rgba(0,207,191,0.4)]" />
                                         </svg>
                                         <div className="absolute flex flex-col items-center">
                                             <span className="text-3xl font-black text-white">75%</span>

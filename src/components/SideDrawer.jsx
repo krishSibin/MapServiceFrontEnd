@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 
 const layerItems = [
-    { id: 'village', label: 'Village Layer', icon: MapPin, color: '#38bdf8' },
-    { id: 'panchayat', label: 'Panchayath Boundary', icon: MapPin, color: '#38bdf8' },
+    { id: 'village', label: 'Village Layer', icon: MapPin, color: '#00cfbf' },
+    { id: 'panchayat', label: 'Panchayath Boundary', icon: MapPin, color: '#00cfbf' },
     { id: 'taluk', label: 'Taluk Boundary', icon: Layout, color: '#a855f7' },
     { id: 'flood', label: 'Flood Inundation', icon: Waves, color: '#ef4444' },
     { id: 'crop', label: 'Agricultural Zones', icon: Sprout, color: '#22c55e' },
@@ -80,7 +80,7 @@ const SideDrawer = ({
                     {/* Drawer Header matching target image style */}
                     <div className="p-6 flex items-center justify-between border-b border-white/5 bg-[#141b26]">
                         <div className="flex items-center gap-3">
-                            <Layers size={18} className="text-[#38bdf8]" />
+                            <Layers size={18} className="text-[#00cfbf]" />
                             <span className="font-outfit font-black uppercase tracking-[0.2em] text-xs text-white">Analysis Tools</span>
                         </div>
                         <button
@@ -110,7 +110,7 @@ const SideDrawer = ({
                                         {filteredPanchayats.map((name, i) => (
                                             <button
                                                 key={i}
-                                                className="w-full text-left p-3 hover:bg-[#38bdf8]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
+                                                className="w-full text-left p-3 hover:bg-[#00cfbf]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
                                                 onClick={() => {
                                                     onSearch(name);
                                                     setSearchTerm('');
@@ -143,7 +143,7 @@ const SideDrawer = ({
                                             {filteredVillages.map((name, i) => (
                                                 <button
                                                     key={i}
-                                                    className="w-full text-left p-3 hover:bg-[#38bdf8]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
+                                                    className="w-full text-left p-3 hover:bg-[#00cfbf]/10 text-white/70 text-xs hover:text-white border-b border-white/5 last:border-0"
                                                     onClick={() => {
                                                         // Note: We need a handleSearchVillage prop if we want to search villages specifically
                                                         // But for now we just use onSearch which currently points to handleSearchPanchayat
