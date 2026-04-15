@@ -407,7 +407,7 @@ function App() {
               )}
 
               {/* Premium Responsive Date Timeline Slider with Optimized Animation */}
-              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-max max-w-[calc(100%-116px)] md:max-w-[400px]">
+              <div className="absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center pointer-events-none w-[92%] md:w-max md:max-w-[400px]">
                 <AnimatePresence mode="wait">
                   {showSlider ? (
                     <motion.div
@@ -417,14 +417,22 @@ function App() {
                       exit={{ opacity: 0, y: 15, scale: 0.98 }}
                       transition={{ duration: 0.2, ease: "circOut" }}
                       style={{ willChange: "transform, opacity" }}
-                      className="bg-[#0b1219]/90 backdrop-blur-md border border-white/10 p-1.5 md:p-2.5 px-3 md:px-5 rounded-[1rem] shadow-[0_15px_50px_rgba(0,0,0,0.7)] flex items-center gap-2 md:gap-4 w-full pointer-events-auto"
+                      className="bg-[#0b1219]/95 backdrop-blur-md border border-white/10 p-1.5 md:p-2.5 px-3 md:px-5 rounded-[1rem] shadow-[0_15px_50px_rgba(0,0,0,0.7)] flex items-center gap-2 md:gap-4 w-full pointer-events-auto relative"
                     >
+                      <button
+                        onClick={() => setShowSlider(false)}
+                        className="absolute -top-2 -right-2 w-6 h-6 md:w-7 md:h-7 bg-[#0b1219] border border-white/10 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-all shadow-xl z-20"
+                        title="Close Timeline"
+                      >
+                        <X size={12} className="md:w-3.5 md:h-3.5" />
+                      </button>
+
                       <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0 border-r border-white/10 pr-2 md:pr-4 h-4 md:h-5">
                         <Calendar size={11} className="text-[#00cfbf] md:w-3.5 md:h-3.5" />
                         <span className="text-[10px] md:text-[13px] font-black text-white whitespace-nowrap drop-shadow-md">{formatDateDisplay(availableDates[sliderIndex] || availableDates[0])}</span>
                       </div>
 
-                      <div className="flex-1 relative h-6 md:h-8 flex items-center min-w-[120px] md:min-w-[180px]">
+                      <div className="flex-1 relative h-6 md:h-8 flex items-center min-w-[80px] md:min-w-[180px]">
                         {/* Background Ticks */}
                         <div className="absolute inset-0 flex justify-between items-center px-[2px] pointer-events-none z-[5]">
                           {availableDates.map((_, i) => (
@@ -456,13 +464,6 @@ function App() {
                           <div className="absolute inset-0 bg-[#00cfbf]/50 blur-[1px]"></div>
                         </div>
                       </div>
-
-                      <button
-                        onClick={() => setShowSlider(false)}
-                        className="ml-1 md:ml-2 p-1 text-neutral-500 hover:text-white transition-colors"
-                      >
-                        <X size={12} className="md:w-3.5 md:h-3.5" />
-                      </button>
                     </motion.div>
                   ) : (
                     <motion.button
@@ -475,7 +476,7 @@ function App() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setShowSlider(true)}
-                      className="bg-[#0b1219]/90 backdrop-blur-md border border-white/10 p-2 md:p-2.5 px-4 md:px-5 rounded-[1rem] shadow-2xl text-[#38bdf8] transition-all group pointer-events-auto flex items-center gap-2.5"
+                      className="bg-[#0b1219]/90 backdrop-blur-md border border-white/10 p-2 md:p-2.5 px-4 md:px-5 rounded-[1rem] shadow-2xl text-[#00cfbf] transition-all group pointer-events-auto flex items-center gap-2.5"
                       title="Open Timeline"
                     >
                       <Clock size={14} className="md:w-3.5 md:h-3.5 text-[#00cfbf]" />
