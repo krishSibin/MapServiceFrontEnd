@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useCallback } from "react";
-import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, useMap, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Helper component to handle map movement
-const MapController = ({ searchTarget, onSearchComplete }) => {
+const MapController = ({ searchTarget }) => {
     const map = useMap();
 
     useEffect(() => {
@@ -14,7 +14,7 @@ const MapController = ({ searchTarget, onSearchComplete }) => {
                 const bounds = layer.getBounds();
                 if (bounds.isValid()) {
                     map.flyToBounds(bounds, {
-                        padding: [50, 50],
+                        padding: [100, 100],
                         duration: 1.5,
                         easeLinearity: 0.25
                     });
@@ -22,15 +22,14 @@ const MapController = ({ searchTarget, onSearchComplete }) => {
             } catch (err) {
                 console.warn("Bounds error:", err);
             }
-            if (onSearchComplete) onSearchComplete();
         }
-    }, [searchTarget, map, onSearchComplete]);
+    }, [searchTarget, map]);
 
     return null;
 };
 
-// Optimized individual GeoJSON layer component to prevent unnecessary re-renders
-const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect }) => {
+// Optimized individual GeoJSON layer component
+const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect, forceUpdateKey }) => {
     const filteredFeatures = useMemo(() => {
         if (!data || !data.features) return [];
         if (riskFilter === "all") return data.features;
@@ -57,7 +56,7 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
             },
             mouseover: (e) => {
                 const l = e.target;
-                l.setStyle({ fillOpacity: 0.9, weight: 2 });
+                l.setStyle({ weight: 4 });
             },
             mouseout: (e) => {
                 const l = e.target;
@@ -70,50 +69,56 @@ const OptimizedLayer = React.memo(({ name, data, riskFilter, getStyle, onSelect 
 
     return (
         <GeoJSON
-            key={`${name}-${riskFilter}`}
+            key={`${name}-${riskFilter}-${forceUpdateKey}`}
             data={layerData}
             style={(f) => getStyle(name, f)}
             onEachFeature={onEachFeature}
-            // Use canvas for better performance with large sets
             renderer={L.canvas()}
+            interactive={onSelect !== null}
         />
     );
 });
 
-const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete }) => {
+const MapView = ({ layers, riskFilter, searchTarget, selectedFeature, onSelect, onSearchComplete }) => {
 
-    const getStyle = (layerName, feature) => {
+    const isFeatureMatch = (f1, f2) => {
+        if (!f1 || !f2) return false;
+        // Check standard IDs or names
+        const name1 = f1.properties?.PANCHAYAT || f1.properties?.TALUK || f1.properties?.name;
+        const name2 = f2.properties?.PANCHAYAT || f2.properties?.TALUK || f2.properties?.name;
+        if (name1 && name2 && name1 === name2) return true;
+
+        // Fallback to string match of geometry/properties if names missing
+        return JSON.stringify(f1.properties) === JSON.stringify(f2.properties);
+    };
+
+    const getStyle = useCallback((layerName, feature) => {
+        const isHighlighted = isFeatureMatch(feature, selectedFeature) || isFeatureMatch(feature, searchTarget);
+
+        if (isHighlighted) {
+            return {
+                color: "#f8fafc",
+                weight: 6,
+                fillColor: "transparent",
+                fillOpacity: 0,
+                dashArray: null
+            };
+        }
+
         if (layerName === "flood") {
             const dn = feature.properties?.DN;
-            if (dn >= 4) return { fillColor: "#ef4444", fillOpacity: 0.7, weight: 1, color: "#991b1b" };
-            if (dn === 3) return { fillColor: "#fb923c", fillOpacity: 0.7, weight: 1, color: "#9a3412" };
-            if (dn === 2) return { fillColor: "#eab308", fillOpacity: 0.7, weight: 1, color: "#854d0e" };
-            return { fillColor: "#22c55e", fillOpacity: 0.7, weight: 1, color: "#166534" };
+            if (dn >= 4) return { fillColor: "#ef4444", fillOpacity: 0.6, weight: 1, color: "#991b1b" };
+            if (dn === 3) return { fillColor: "#fb923c", fillOpacity: 0.6, weight: 1, color: "#9a3412" };
+            if (dn === 2) return { fillColor: "#eab308", fillOpacity: 0.6, weight: 1, color: "#854d0e" };
+            return { fillColor: "#22c55e", fillOpacity: 0.6, weight: 1, color: "#166534" };
         }
 
-        if (layerName === "crop") {
+        if (layerName === "taluk") {
             return {
-                fillColor: "#84cc16",
-                fillOpacity: 0.5,
-                color: "#365314",
-                weight: 1
-            };
-        }
-
-        if (layerName === "roads") {
-            return {
-                color: "#f97316",
+                color: "#fb923c",
                 weight: 3,
-                opacity: 0.8
-            };
-        }
-
-        if (layerName === "settlement") {
-            return {
-                fillColor: "#38bdf8",
-                fillOpacity: 0.4,
-                color: "#075985",
-                weight: 1
+                fillColor: "transparent",
+                dashArray: "10, 10"
             };
         }
 
@@ -127,32 +132,52 @@ const MapView = ({ layers, riskFilter, searchTarget, onSelect, onSearchComplete 
         }
 
         return { color: "#94a3b8", weight: 1, fillOpacity: 0.1 };
-    };
+    }, [selectedFeature, searchTarget]);
+
+    // Force update key to ensure GeoJSON redraws when selection changes
+    const forceUpdateKey = useMemo(() => {
+        return `${selectedFeature?.properties?.PANCHAYAT || ''}-${searchTarget?.properties?.PANCHAYAT || ''}-${Date.now()}`;
+    }, [selectedFeature, searchTarget]);
+
+    const popupPosition = useMemo(() => {
+        if (selectedFeature && selectedFeature.geometry) {
+            try {
+                return L.geoJSON(selectedFeature).getBounds().getCenter();
+            } catch (e) { return null; }
+        }
+        return null;
+    }, [selectedFeature]);
 
     return (
         <MapContainer
             center={[10.2, 76.45]}
             zoom={10}
             style={{ height: "100%", width: "100%" }}
-            preferCanvas={true} // Boost performance by using canvas instead of SVG
+            preferCanvas={true}
             zoomSnap={0.5}
             zoomDelta={0.5}
-            wheelPxPerZoomLevel={120} // Make zooming feel smoother
+            wheelPxPerZoomLevel={120}
         >
             <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
-            <MapController searchTarget={searchTarget} onSearchComplete={onSearchComplete} />
+            <MapController searchTarget={searchTarget} />
 
-            {Object.entries(layers).map(([name, data]) => (
-                <OptimizedLayer
-                    key={name}
-                    name={name}
-                    data={data}
-                    riskFilter={riskFilter}
-                    getStyle={getStyle}
-                    onSelect={onSelect}
-                />
-            ))}
+            {/* Render layers in specific order for correct stacking and selection */}
+            {['flood', 'taluk', 'panchayat'].map(name => {
+                const data = layers[name];
+                if (!data) return null;
+                return (
+                    <OptimizedLayer
+                        key={name}
+                        name={name}
+                        data={data}
+                        riskFilter={riskFilter}
+                        getStyle={getStyle}
+                        onSelect={name === 'flood' ? null : onSelect}
+                        forceUpdateKey={forceUpdateKey}
+                    />
+                );
+            })}
         </MapContainer>
     );
 };

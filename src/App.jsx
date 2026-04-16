@@ -2,54 +2,48 @@ import React, { useState, useEffect } from 'react';
 import MapView from './components/MapView';
 import Header from './components/Header';
 import SideDrawer from './components/SideDrawer';
+import LandingPage from './components/LandingPage';
 import { io } from "socket.io-client";
 import {
-  Waves,
-  Sprout,
-  MapPin,
-  Home,
-  Activity,
-  TrafficCone,
-  Zap,
-  TrendingUp,
-  BarChart3,
-  Menu
+  X,
+  Target,
+  Maximize2
 } from 'lucide-react';
 import './App.css';
 
 const SOCKET_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 function App() {
+  const [showDashboard, setShowDashboard] = useState(false);
   const [mapTheme, setMapTheme] = useState('dark');
   const [riskFilter, setRiskFilter] = useState('all');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [layers, setLayers] = useState({});
-  const [visibleLayers, setVisibleLayers] = useState(['panchayat', 'flood', 'crop', 'roads', 'settlement']);
+  const [visibleLayers, setVisibleLayers] = useState(['taluk', 'panchayat', 'flood']);
   const [searchTarget, setSearchTarget] = useState(null);
   const [selectedFeature, setSelectedFeature] = useState(null);
 
-  /* ---------------- SOCKET CONNECTION ---------------- */
+  /* ---------------- SOCKET LOGIC ---------------- */
   useEffect(() => {
+    console.log("Connecting to:", SOCKET_URL);
     const socket = io(SOCKET_URL);
+
+    socket.on("connect", () => console.log("✅ Socket Connected"));
     socket.on("geojson-update", (data) => {
+      console.log("📥 GeoJSON Update Received:", Object.keys(data));
       setLayers(data);
     });
+
     return () => socket.disconnect();
   }, []);
 
-  // Memoize visible layers to prevent unnecessary MapView re-renders
+  /* ---------------- MEMOS ---------------- */
   const filteredLayers = React.useMemo(() => {
     return Object.fromEntries(
       Object.entries(layers).filter(([name]) => visibleLayers.includes(name))
     );
   }, [layers, visibleLayers]);
 
-  const stats = React.useMemo(() => [
-    { label: "Flooded Area", value: "3250", unit: "ha", icon: Waves, color: "#38bdf8" },
-    { label: "Crops Affected", value: "1800", unit: "ha", icon: Sprout, color: "#10b981" },
-    { label: "Roads Impacted", value: "12", unit: "", icon: MapPin, color: "#fb923c" },
-    { label: "Villages Affected", value: "8", unit: "", icon: Home, color: "#f43f5e" }
-  ], []);
 
   /* ---------------- HANDLERS ---------------- */
   const handleSelect = React.useCallback((feature) => {
@@ -59,7 +53,10 @@ function App() {
   const handleSearchPanchayat = React.useCallback((panchayatName) => {
     if (!layers.panchayat) return;
     const feature = layers.panchayat.features.find(
-      f => f.properties.PANCHAYAT?.toLowerCase() === panchayatName.toLowerCase()
+      f => {
+        const name = f.properties.PANCHAYAT || f.properties.name;
+        return name?.toLowerCase() === panchayatName.toLowerCase();
+      }
     );
     if (feature) {
       setSearchTarget({ ...feature, _searchId: Date.now() });
@@ -71,12 +68,9 @@ function App() {
     setSearchTarget(null);
   }, []);
 
-  const getRiskColor = React.useCallback((dn) => {
-    if (dn >= 4) return "#ef4444";
-    if (dn === 3) return "#fb923c";
-    if (dn === 2) return "#eab308";
-    return "#22c55e";
-  }, []);
+  if (!showDashboard) {
+    return <LandingPage onStart={() => setShowDashboard(true)} />;
+  }
 
   return (
     <div className="app-container">
@@ -93,38 +87,9 @@ function App() {
         setVisibleLayers={setVisibleLayers}
       />
 
-      <section className="stats-row">
-        {stats.map((stat, i) => (
-          <div key={i} className="stat-card">
-            <div className="stat-icon-wrapper" style={{ color: stat.color, background: `${stat.color}15` }}>
-              <stat.icon size={24} />
-            </div>
-            <div className="stat-info">
-              <span className="stat-label">{stat.label}</span>
-              <div className="stat-value">
-                {stat.value}<span className="stat-unit">{stat.unit}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <main className="main-dashboard-grid">
+      <main className="dashboard-layout">
         <div className={`map-section ${mapTheme}-theme`}>
-          {/* Theme Toggle */}
-          <div className="theme-toggle">
-            <button
-              className={`theme-btn ${mapTheme === 'dark' ? 'active' : ''}`}
-              onClick={() => setMapTheme('dark')}
-            > Dark </button>
-            <button
-              className={`theme-btn ${mapTheme === 'light' ? 'active' : ''}`}
-              onClick={() => setMapTheme('light')}
-            > WHITE </button>
-          </div>
-
           <MapView
-            theme={mapTheme}
             layers={filteredLayers}
             riskFilter={riskFilter}
             searchTarget={searchTarget}
@@ -133,167 +98,94 @@ function App() {
             onSearchComplete={clearSearchTarget}
           />
 
-          {/* Map Overlay Legend */}
-          <div className="map-legend">
-            <div className="legend-item">
-              <div className="legend-color" style={{ border: '2px dashed #38bdf8', background: 'transparent' }}></div>
-              <span>Panchayath Boundary</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ background: '#ef4444' }}></div>
-              <span>Flood: High Risk (4+)</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ background: '#fb923c' }}></div>
-              <span>Flood: Moderate (3)</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ background: '#84cc16' }}></div>
-              <span>Crop Zones (Agriculture)</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ background: '#f97316' }}></div>
-              <span>Road Impact Infrastructure</span>
-            </div>
-            <div className="legend-item">
-              <div className="legend-color" style={{ background: '#38bdf8', opacity: 0.6 }}></div>
-              <span>Settlement Areas</span>
+          {/* Map Overlay Controls */}
+          <div className="map-controls-group">
+            <div className="theme-toggle-glass">
+              <button
+                className={`theme-btn-mini ${mapTheme === 'dark' ? 'active' : ''}`}
+                onClick={() => setMapTheme('dark')}
+              >DARK</button>
+              <button
+                className={`theme-btn-mini ${mapTheme === 'light' ? 'active' : ''}`}
+                onClick={() => setMapTheme('light')}
+              >LIGHT</button>
+              <button
+                className="theme-btn-mini exit-btn-mini"
+                onClick={() => setShowDashboard(false)}
+              >EXIT</button>
             </div>
           </div>
 
-          {/* Map Info Overlay (Floating on Desktop) */}
+          {/* Info Overlay (Feature Selection) */}
           {selectedFeature && (
-            <div className="map-info-overlay desktop-only">
+            <div className="map-info-overlay">
               <div className="overlay-header">
-                <div className="title-group">
-                  <span className="source-tag">
-                    {selectedFeature.properties.PANCHAYAT ? 'ADMINISTRATIVE AREA' : (selectedFeature._layerName || 'ANALYSIS AREA').toUpperCase()}
-                  </span>
-                  <h3>{selectedFeature.properties.PANCHAYAT || `Feature Details`}</h3>
+                <div>
+                  <span className="source-tag">ANALYSIS DATA: {selectedFeature._layerName?.toUpperCase()}</span>
+                  <h3>{selectedFeature.properties.PANCHAYAT || selectedFeature.properties.TALUK || selectedFeature.properties.name || "Feature Detail"}</h3>
                 </div>
-                <button className="close-overlay" onClick={() => setSelectedFeature(null)}>
-                  ×
+                <button className="close-btn" onClick={() => setSelectedFeature(null)}>
+                  <X size={18} />
                 </button>
               </div>
 
-              <div className="overlay-content">
-                {selectedFeature.properties.PANCHAYAT ? (
-                  <>
-                    <div className="info-grid">
-                      <div className="info-item">
-                        <label>District</label>
-                        <span>{selectedFeature.properties.DISTRICT || 'N/A'}</span>
-                      </div>
-                      <div className="info-item">
-                        <label>Block</label>
-                        <span>{selectedFeature.properties.BLOCK || 'N/A'}</span>
-                      </div>
+              <div className="info-grid">
+                {Object.entries(selectedFeature.properties)
+                  .filter(([key]) => !key.startsWith('_') && key !== 'PANCHAYAT' && key !== 'TALUK')
+                  .slice(0, 6)
+                  .map(([key, value]) => (
+                    <div key={key} className="info-item">
+                      <label>{key.replace(/_/g, ' ')}</label>
+                      <span>{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="info-grid">
-                      <div className="info-item">
-                        <label>Category</label>
-                        <span className="capitalize">{selectedFeature._layerName || 'Analysis Layer'}</span>
-                      </div>
-                      {selectedFeature.properties.DN !== undefined && (
-                        <div className="info-item">
-                          <label>Risk Index (DN)</label>
-                          <span style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                  ))}
+                {selectedFeature._layerName === 'flood' && (
+                  <div className="info-item">
+                    <label>RISK INDEX</label>
+                    <span style={{ color: selectedFeature.properties.DN >= 3 ? '#f43f5e' : '#fb923c' }}>
+                      {selectedFeature.properties.DN >= 4 ? 'EXTREME' : selectedFeature.properties.DN === 3 ? 'HIGH' : 'MODERATE'}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
           )}
-        </div>
 
-        {/* Mobile Selection Card (Flowing below map) */}
-        {selectedFeature && (
-          <div className="mobile-selection-card mobile-only">
-            <div className="card-header">
-              <span className="source-tag">
-                {selectedFeature.properties.PANCHAYAT ? 'PANCHAYAT ANALYSIS' : (selectedFeature._layerName || 'DATA ANALYSIS').toUpperCase()}
-              </span>
-              <div className="header-main">
-                <h3>{selectedFeature.properties.PANCHAYAT || `Feature Info`}</h3>
-                <button className="close-btn" onClick={() => setSelectedFeature(null)}>×</button>
+          {/* Map Legend */}
+          <div className="map-legend">
+            <div className="legend-header">SPATIAL INDEX</div>
+            {visibleLayers.includes('taluk') && (
+              <div className="legend-item">
+                <div className="legend-color" style={{ border: '2px dashed #fb923c', background: 'transparent' }}></div>
+                <span>Taluk Boundary</span>
               </div>
-            </div>
-            <div className="card-body">
-              {selectedFeature.properties.PANCHAYAT ? (
-                <div className="mobile-info-row">
-                  <div className="mobile-info-col">
-                    <label>District</label>
-                    <p>{selectedFeature.properties.DISTRICT}</p>
-                  </div>
-                  <div className="mobile-info-col">
-                    <label>Block</label>
-                    <p>{selectedFeature.properties.BLOCK}</p>
-                  </div>
+            )}
+            {visibleLayers.includes('panchayat') && (
+              <div className="legend-item">
+                <div className="legend-color" style={{ border: '2px dashed #38bdf8', background: 'transparent' }}></div>
+                <span>Panchayat Area</span>
+              </div>
+            )}
+            {visibleLayers.includes('flood') && (
+              <>
+                <div className="legend-item">
+                  <div className="legend-color" style={{ background: '#f43f5e' }}></div>
+                  <span>High Risk (4+)</span>
                 </div>
-              ) : (
-                <div className="mobile-info-row">
-                  <div className="mobile-info-col">
-                    <label>Layer</label>
-                    <p className="capitalize">{selectedFeature._layerName}</p>
-                  </div>
-                  {selectedFeature.properties.DN !== undefined && (
-                    <div className="mobile-info-col">
-                      <label>Risk DN</label>
-                      <p style={{ color: getRiskColor(selectedFeature.properties.DN) }}>{selectedFeature.properties.DN}</p>
-                    </div>
-                  )}
+                <div className="legend-item">
+                  <div className="legend-color" style={{ background: '#fb923c' }}></div>
+                  <span>Moderate (3)</span>
                 </div>
-              )}
-            </div>
+                <div className="legend-item">
+                  <div className="legend-color" style={{ background: '#eab308' }}></div>
+                  <span>Low Risk (2)</span>
+                </div>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </main>
-
-      <section className="bottom-widgets">
-        <div className="widget-card">
-          <div className="panel-header">
-            <BarChart3 size={18} className="text-blue-400" />
-            <span className="text-sm font-bold tracking-wider">AGRICULTURAL IMPACT</span>
-          </div>
-          <div className="chart-placeholder">
-            <div className="chart-bars">
-              {[40, 60, 35, 25].map((h, i) => (
-                <div key={i} className="chart-bar" style={{ height: `${h}px`, background: i === 0 ? '#10b981' : i === 1 ? '#eab308' : i === 2 ? '#fb923c' : '#f43f5e' }}></div>
-              ))}
-            </div>
-          </div>
-          <p className="text-xs text-slate-400 text-center">Loss Estimate: $1.5M</p>
-        </div>
-
-        <div className="widget-card">
-          <div className="panel-header">
-            <TrafficCone size={18} className="text-orange-400" />
-            <span className="text-sm font-bold tracking-wider">INFRASTRUCTURE STATUS</span>
-          </div>
-          <ul className="infra-list">
-            <li className="infra-item"><span>Highway 24</span><span className="infra-status status-closed">CLOSED</span></li>
-            <li className="infra-item"><span>4 Roads</span><span className="infra-status status-blocked">BLOCKED</span></li>
-            <li className="infra-item"><span>6 Buildings</span><span className="infra-status status-damaged">DAMAGED</span></li>
-          </ul>
-        </div>
-
-        <div className="widget-card">
-          <div className="panel-header">
-            <TrendingUp size={18} className="text-emerald-400" />
-            <span className="text-sm font-bold tracking-wider">FLOOD INTENSITY TREND</span>
-          </div>
-          <div className="chart-placeholder">
-            <Activity size={32} className="opacity-20 pulsate" />
-            <span className="ml-2">Live Trend Feed...</span>
-          </div>
-        </div>
-      </section>
-    </div >
+    </div>
   );
 }
 

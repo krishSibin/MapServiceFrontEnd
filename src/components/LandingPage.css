@@ -1,0 +1,224 @@
+.landing-container {
+    height: 100vh;
+    width: 100vw;
+    background-color: #020617;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 2vh 0;
+}
+
+.background-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(circle at center, black, transparent 90%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow {
+    position: absolute;
+    width: 60vh;
+    height: 60vh;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.glow-1 {
+    top: -10vh;
+    left: -10vh;
+    background: radial-gradient(circle, #0ea5e9, transparent);
+}
+
+.glow-2 {
+    bottom: -10vh;
+    right: -10vh;
+    background: radial-gradient(circle, #f43f5e, transparent);
+}
+
+.landing-nav {
+    flex-shrink: 0;
+    z-index: 10;
+    margin-bottom: 2vh;
+}
+
+.brand-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    font-weight: 800;
+}
+
+.landing-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 40px;
+    z-index: 10;
+    gap: 3vh;
+}
+
+.hero-title {
+    font-size: clamp(2rem, 8vh, 4rem);
+    font-weight: 900;
+    line-height: 1;
+    margin: 0;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #38bdf8, #818cf8, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-description {
+    font-size: clamp(0.9rem, 2vh, 1.1rem);
+    color: #94a3b8;
+    line-height: 1.5;
+    max-width: 600px;
+    margin: 0;
+}
+
+.feature-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.feature-card {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2vh;
+    text-align: left;
+    transition: transform 0.3s;
+}
+
+.icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5vh;
+}
+
+.feature-card h3 {
+    font-size: clamp(0.9rem, 1.8vh, 1.1rem);
+    font-weight: 700;
+    margin-bottom: 0.5vh;
+    color: white;
+}
+
+.feature-card p {
+    font-size: clamp(0.7rem, 1.4vh, 0.85rem);
+    color: #64748b;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.initialize-btn {
+    margin-top: 4vh;
+    background: white;
+    color: #020617;
+    padding: clamp(12px, 2vh, 20px) clamp(30px, 4vw, 50px);
+    border-radius: 100px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    cursor: pointer;
+    font-size: clamp(0.9rem, 1.8vh, 1.1rem);
+    text-transform: uppercase;
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+    animation: btn-pulse 2s infinite;
+}
+
+@keyframes btn-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 10px 50px rgba(56, 189, 248, 0.6);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+    }
+}
+
+.landing-footer {
+    flex-shrink: 0;
+    padding: 2vh;
+    color: #334155;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .feature-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .feature-card {
+        padding: 1.5vh;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+}
+
+@media (max-height: 700px) {
+    .feature-cards {
+        gap: 10px;
+    }
+
+    .hero-description {
+        margin-bottom: 0;
+    }
+
+    .landing-content {
+        gap: 2vh;
+    }
+}

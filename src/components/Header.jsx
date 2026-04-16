@@ -1,36 +1,34 @@
 import React from 'react';
-import { ShieldAlert, Menu, Bell, FileText } from 'lucide-react';
+import { ShieldAlert, Menu, Bell, FileText, Activity } from 'lucide-react';
 
 const Header = ({ onOpenMenu }) => {
     return (
         <header className="dashboard-header">
             <div className="logo-section">
                 <div className="logo-icon-container">
-                    <ShieldAlert className="logo-icon pulse-red" size={28} />
+                    <img src="/logo.jpg" alt="Nexira Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <h1 className="text-xl font-bold tracking-tight">
-                    Real-Time <span className="text-blue-400">Flood</span> Monitoring System
+                <h1>
+                    NEXIRA <span className="highlight">SPATIAL</span>
                 </h1>
             </div>
 
             <nav className="status-indicators">
-                <div className="status-item cursor-pointer hover:bg-slate-800 transition-colors">
-                    <Bell size={16} className="text-red-400" />
+                <div className="status-item">
+                    <Bell size={14} className="text-red-400" />
                     <span>ALERTS</span>
                 </div>
-                <div className="status-item cursor-pointer hover:bg-slate-800 transition-colors">
-                    <FileText size={16} className="text-blue-400" />
+                <div className="status-item">
+                    <FileText size={14} className="text-blue-400" />
                     <span>REPORTS</span>
                 </div>
 
-                {/* Premium Side Drawer Toggle */}
                 <button
                     onClick={onOpenMenu}
                     className="drawer-trigger-btn"
-                    title="Analysis Tools"
                 >
                     <Menu size={20} />
-                    <span className="text-xs font-bold ml-2">TOOLS</span>
+                    <span>LAYERS</span>
                 </button>
             </nav>
         </header>

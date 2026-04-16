@@ -1,22 +1,26 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves, Sprout, MapPin, Home } from 'lucide-react';
+import { X, Search, Filter, Map as MapIcon, Info, ChevronRight, Layers, Waves } from 'lucide-react';
 
 const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilter, visibleLayers, setVisibleLayers }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredPanchayats = useMemo(() => {
-        if (!layers?.panchayat?.features) return [];
+    const suggestions = useMemo(() => {
+        if (!layers?.panchayat?.features || !searchTerm) return [];
 
         const term = searchTerm.toLowerCase();
-        // Extract names once
-        const names = layers.panchayat.features.map(f => f.properties.PANCHAYAT).filter(Boolean);
+        const results = [];
+        const seen = new Set();
 
-        if (!term) return names.slice(0, 10);
-
-        return names
-            .filter(name => name.toLowerCase().includes(term))
-            .slice(0, 10);
-    }, [layers?.panchayat?.features, searchTerm]);
+        for (const feature of layers.panchayat.features) {
+            const name = feature.properties?.PANCHAYAT || feature.properties?.name;
+            if (name && name.toLowerCase().includes(term) && !seen.has(name)) {
+                results.push(name);
+                seen.add(name);
+                if (results.length >= 6) break;
+            }
+        }
+        return results;
+    }, [layers?.panchayat, searchTerm]);
 
     const toggleLayer = useCallback((layerName) => {
         setVisibleLayers(prev =>
@@ -27,11 +31,9 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
     }, [setVisibleLayers]);
 
     const layerItems = [
-        { id: 'panchayat', label: 'Land Boundaries', icon: MapIcon, color: '#38bdf8' },
-        { id: 'flood', label: 'Flood Risk (DN)', icon: Waves, color: '#ef4444' },
-        { id: 'crop', label: 'Agricultural Areas', icon: Sprout, color: '#10b981' },
-        { id: 'roads', label: 'Road Infrastructure', icon: MapPin, color: '#fb923c' },
-        { id: 'settlement', label: 'Human Settlements', icon: Home, color: '#818cf8' }
+        { id: 'taluk', label: 'Taluk Boundaries', icon: MapIcon, color: '#fb923c' },
+        { id: 'panchayat', label: 'Panchayat Areas', icon: MapIcon, color: '#38bdf8' },
+        { id: 'flood', label: 'Flood Hazard Zone', icon: Waves, color: '#f43f5e' }
     ];
 
     return (
@@ -39,7 +41,7 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
             <div className="drawer-header">
                 <div className="drawer-title">
                     <MapIcon size={20} className="text-blue-400" />
-                    <span>ANALYSIS TOOLS</span>
+                    <span>SYSTEM TOOLS</span>
                 </div>
                 <button className="close-btn" onClick={onClose}>
                     <X size={20} />
@@ -50,19 +52,21 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
                 {/* Search Section */}
                 <div className="drawer-section">
                     <label className="section-label">
-                        <Search size={14} className="text-blue-400" /> SEARCH PANCHAYATH
+                        <Search size={14} /> Search Panchayat
                     </label>
-                    <div className="search-input-wrapper relative">
+                    <div className="drawer-input-container">
                         <input
                             type="text"
-                            placeholder="Type panchayath name..."
+                            placeholder="Type boundary name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="drawer-input w-full bg-slate-800/50 border-2 border-slate-700 focus:border-blue-500 text-white p-3 rounded-xl outline-none transition-all placeholder:text-slate-500"
+                            className="drawer-input"
                         />
-                        {searchTerm && filteredPanchayats.length > 0 && (
-                            <div className="search-results absolute left-0 right-0 mt-2 z-50">
-                                {filteredPanchayats.map((name, i) => (
+                        <Search size={18} className="search-icon-inside" />
+
+                        {suggestions.length > 0 && (
+                            <div className="search-results">
+                                {suggestions.map((name, i) => (
                                     <div
                                         key={i}
                                         className="result-item"
@@ -71,7 +75,7 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
                                             setSearchTerm('');
                                         }}
                                     >
-                                        <ChevronRight size={14} className="text-slate-500" />
+                                        <ChevronRight size={14} />
                                         <span>{name}</span>
                                     </div>
                                 ))}
@@ -83,7 +87,7 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
                 {/* Layer Control Section */}
                 <div className="drawer-section">
                     <label className="section-label">
-                        <Layers size={14} className="text-blue-400" /> ACTIVE DATA LAYERS
+                        <Layers size={14} /> Data Layers
                     </label>
                     <div className="layer-stack">
                         {layerItems.map(item => (
@@ -93,34 +97,39 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
                                 onClick={() => toggleLayer(item.id)}
                             >
                                 <div className="layer-info">
-                                    <item.icon size={16} style={{ color: item.color }} />
+                                    <item.icon size={18} style={{ color: item.color }} />
                                     <span>{item.label}</span>
                                 </div>
-                                <div className={`custom-checkbox ${visibleLayers.includes(item.id) ? 'checked' : ''}`}></div>
+                                <div className="checkbox-visual">
+                                    {visibleLayers.includes(item.id) && <ChevronRight size={14} color="white" />}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Filter Section - Specifically for Flood Risk */}
+                {/* Flood Risk Filter (Conditional) */}
                 {visibleLayers.includes('flood') && (
                     <div className="drawer-section">
                         <label className="section-label">
-                            <Filter size={14} className="text-blue-400" /> FLOOD INTENSITY (DN)
+                            <Filter size={14} /> INTENSITY FILTER
                         </label>
                         <div className="filter-grid">
                             {[
-                                { id: 'all', label: 'All Risks', color: '#94a3b8' },
-                                { id: '4', label: 'High (4+)', color: '#ef4444' },
-                                { id: '3', label: 'Moderate (3)', color: '#fb923c' },
-                                { id: '2', label: 'Low (2)', color: '#eab308' },
-                                { id: '1', label: 'Minimal (1)', color: '#22c55e' },
+                                { id: 'all', label: 'All Hazards', color: '#94a3b8', shadow: 'rgba(148, 163, 184, 0.2)' },
+                                { id: '4', label: 'Extreme (4+)', color: '#f43f5e', shadow: 'rgba(244, 63, 94, 0.3)' },
+                                { id: '3', label: 'High (3)', color: '#fb923c', shadow: 'rgba(251, 146, 60, 0.3)' },
+                                { id: '2', label: 'Moderate (2)', color: '#eab308', shadow: 'rgba(234, 179, 8, 0.3)' },
+                                { id: '1', label: 'Low (1)', color: '#22c55e', shadow: 'rgba(34, 197, 94, 0.3)' },
                             ].map(item => (
                                 <button
                                     key={item.id}
-                                    className={`filter-chip ${riskFilter === item.id ? 'active' : ''}`}
+                                    className={`filter-pill ${riskFilter === item.id ? 'active' : ''}`}
                                     onClick={() => setRiskFilter(item.id)}
-                                    style={{ '--chip-color': item.color }}
+                                    style={{
+                                        '--active-color': item.color,
+                                        '--active-shadow': item.shadow
+                                    }}
                                 >
                                     {item.label}
                                 </button>
@@ -130,18 +139,13 @@ const SideDrawer = ({ isOpen, onClose, layers, onSearch, riskFilter, setRiskFilt
                 )}
 
                 <div className="mt-auto">
-                    {/* Info Section */}
-                    <div className="drawer-section guide-box">
+                    <div className="guide-box">
                         <div className="guide-header">
-                            <Info size={16} /> <span>Quick Guide</span>
+                            <Info size={16} /> <span>System Overview</span>
                         </div>
-                        <p>Toggle layers to view different analysis data. Use the intensity filter to drill down into flood hazard zones.</p>
+                        <p>Analyze spatial metrics by toggling environmental layers. Use the search to zoom into specific administrative boundaries.</p>
                     </div>
                 </div>
-            </div>
-
-            <div className="drawer-footer">
-                <span className="text-xs text-slate-500">MapService VR Analytics • Live Data</span>
             </div>
         </div>
     );
