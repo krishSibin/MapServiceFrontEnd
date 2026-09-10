@@ -248,9 +248,18 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
         });
     }, [layers]);
 
-    const tileUrl = theme === 'light'
-        ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    // CARTO basemaps now require an API key; without one the tiles come back
+    // stamped with an "API key required" watermark.
+    const cartoKey = import.meta.env.VITE_CARTO_BASEMAP_KEY;
+
+    const tileUrl = useMemo(() => {
+        const style = theme === 'light' ? 'light_all' : 'dark_all';
+        const url = `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png`;
+        return cartoKey ? `${url}?key=${cartoKey}` : url;
+    }, [theme, cartoKey]);
+
+    // CARTO's key terms require OSM + CARTO attribution to stay visible.
+    const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
     return (
         <div className="relative w-full h-full">
@@ -291,7 +300,7 @@ const MapView = ({ theme, layers, isInitialLoad, riskFilter, searchTarget, selec
                 zoomDelta={0.5}
                 wheelPxPerZoomLevel={120}
             >
-                <TileLayer url={tileUrl} />
+                <TileLayer url={tileUrl} attribution={tileAttribution} subdomains="abcd" />
 
                 <MapController searchTarget={searchTarget} selectedFeature={selectedFeature} onSearchComplete={onSearchComplete} allLayers={layers} setIsLocating={setIsLocating} />
 
